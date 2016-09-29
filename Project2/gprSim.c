@@ -191,8 +191,10 @@ void li() {
 
 }
 
-void subi() {
-
+void subi(string operands) {
+	int32 rdest, rsrc1, imm;
+	sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
+	registers[rdest] = registers[rsrc1] - registers[imm];
 }
 
 void syscall() {

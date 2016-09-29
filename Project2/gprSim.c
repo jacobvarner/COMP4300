@@ -289,13 +289,9 @@ void syscall() {
 }
 
 void readString() {
-	string input;
-	scanf("%s", input);
-	string lengthOfInput = strlen(input);
+	// Empty stub for now
 }
 
 void writeString() {
 	printf("%s", strings[register[31]]);
 }
-
-

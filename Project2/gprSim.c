@@ -170,21 +170,33 @@ void addi(string operands) {
 }
 
 void b(string operands) {
-	int32 offset;
-	sscanf(operands, "%d", offset);
-	program_counter += offset;
+	int32 label;
+	sscanf(operands, "%d", label);
+	program_counter += label;
 }
 
-void beqz() {
-
+void beqz(string operands) {
+	int32 label, rsrc1;
+	sscanf(operands, "%*c%d, %d", rsrc1, label);
+	if(registers[rsrc1] == 0) {
+		program_counter += label;
+	}
 }
 
-void bge() {
-
+void bge(string operands) {
+	int32 label, rsrc1, rsrc2;
+	sscanf(operands, "%*c%d, %d", rsrc1, rsrc2, label);
+	if(registers[rsrc1] >= registers[rsrc2]) {
+		program_counter += label;
+	}
 }
 
-void bne() {
-
+void bne(string operands) {
+	int32 label, rsrc1, rsrc2;
+	sscanf(operands, "%*c%d, %d", rsrc1, rsrc2, label);
+	if(registers[rsrc1] != registers[rsrc2]) {
+		program_counter += label;
+	}
 }
 
 void la(string operands) {

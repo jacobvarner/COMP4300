@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 		program_counter++;
 	}
 
-	printf("\nRESULTS:\n\nAccumulator: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", accumulator,
+	printf("\nRESULTS:\n\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
 	memory.data_segment[0].operand, memory.data_segment[0].content,
 	memory.data_segment[1].operand, memory.data_segment[1].content,
 	memory.data_segment[2].operand, memory.data_segment[2].content,
@@ -68,8 +68,8 @@ void load(string operand) {
 	int32 address = (int32)strtol(operand, NULL, 0);
 	Data data = loadData(address, memory);
 	//store that value at the top of stack
-	accumulator = data.content;
-  printf("\nStatus:\n\nAccumulator: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", accumulator,
+	registers[0] = data.content;
+  printf("\nStatus:\n\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
 	memory.data_segment[0].operand, memory.data_segment[0].content,
 	memory.data_segment[1].operand, memory.data_segment[1].content,
 	memory.data_segment[2].operand, memory.data_segment[2].content,
@@ -81,8 +81,8 @@ void sto(string operand) {
 	//fetch value from data section using operand
 	int32 address = (int32)strtol(operand, NULL, 0);
 	//store that value at the top of stack
-	memory.data_segment[address].content = accumulator;
-  printf("\nStatus:\nAccumulator: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", accumulator,
+	memory.data_segment[address].content = registers[0];
+  printf("\nStatus:\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
 	memory.data_segment[0].operand, memory.data_segment[0].content,
 	memory.data_segment[1].operand, memory.data_segment[1].content,
 	memory.data_segment[2].operand, memory.data_segment[2].content,
@@ -95,9 +95,9 @@ void add(string operand) {
   int32 address = (int32)strtol(operand, NULL, 0);
 	Data data = loadData(address, memory);
   sum += data.content;
-  sum += accumulator;
-  accumulator = sum;
-  printf("\nStatus:\nAccumulator: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", accumulator,
+  sum += registers[0];
+  registers[0] = sum;
+  printf("\nStatus:\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
 	memory.data_segment[0].operand, memory.data_segment[0].content,
 	memory.data_segment[1].operand, memory.data_segment[1].content,
 	memory.data_segment[2].operand, memory.data_segment[2].content,
@@ -109,9 +109,9 @@ void multiply(string operand) {
 	int product = 0;
   int32 address = (int32)strtol(operand, NULL, 0);
 	Data data = loadData(address, memory);
-  product = data.content * accumulator;
-  accumulator = product;
-  printf("\nStatus:\nAccumulator: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", accumulator,
+  product = data.content * registers[0];
+  registers[0] = product;
+  printf("\nStatus:\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
 	memory.data_segment[0].operand, memory.data_segment[0].content,
 	memory.data_segment[1].operand, memory.data_segment[1].content,
 	memory.data_segment[2].operand, memory.data_segment[2].content,

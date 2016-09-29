@@ -8,6 +8,7 @@
 
 Memory memory;
 int program_counter;
+int time;
 int registers[NUM_REGISTERS];
 
 void load(string operands);
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]) {
 	printf("\nLoading complete!\n\n");
 
 	program_counter = 0;
+  time = 0;
 	int run = 1;
 	Text currentText;
 	int currentInstructionCode;
@@ -167,12 +169,14 @@ void addi(string operands) {
   sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
   int32 answer = registers[rsrc1] + imm;
   registers[rdest] = answer;
+  time += 6;
 }
 
 void b(string operands) {
 	int32 label;
 	sscanf(operands, "%d", label);
 	program_counter += label;
+  time += 4;
 }
 
 void beqz(string operands) {
@@ -181,6 +185,7 @@ void beqz(string operands) {
 	if(registers[rsrc1] == 0) {
 		program_counter += label;
 	}
+  time += 5;
 }
 
 void bge(string operands) {
@@ -189,6 +194,7 @@ void bge(string operands) {
 	if(registers[rsrc1] >= registers[rsrc2]) {
 		program_counter += label;
 	}
+  time += 5;
 }
 
 void bne(string operands) {
@@ -197,6 +203,7 @@ void bne(string operands) {
 	if(registers[rsrc1] != registers[rsrc2]) {
 		program_counter += label;
 	}
+  time += 5;
 }
 
 void la(string operands) {
@@ -204,6 +211,7 @@ void la(string operands) {
   int32 label;
   sscanf(operands, "%*c%d %d", &rdest, &label);
   registers[rdest] = label;
+  time += 5;
 }
 
 void lb(string operands) {
@@ -212,6 +220,7 @@ void lb(string operands) {
   int32 rsrc1;
   sscanf(operands, "%*c%d %d %*c%d", &rdest, &offset, &rsrc1);
   registers[rdest] = registers[rsrc1 + offset];
+  time += 6;
 }
 
 void li(string operands) {
@@ -219,14 +228,16 @@ void li(string operands) {
   int32 imm;
   sscanf(operands, "%*c%d %d", &rdest, &imm);
   registers[rdest] = imm;
+  time += 3;
 }
 
 void subi(string operands) {
 	int32 rdest, rsrc1, imm;
 	sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
 	registers[rdest] = registers[rsrc1] - registers[imm];
+  time += 6;
 }
 
 void syscall(string operands) {
-
+  time += 8;
 }

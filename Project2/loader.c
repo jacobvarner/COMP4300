@@ -1,4 +1,5 @@
 #include "loader.h"
+#include "memory.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -30,8 +31,8 @@ Memory loadProgramIntoMemory(char program_file_path[]) {
 			memory.text_segment[text_segment_index].address = nextTextSegmentAddress;
 			nextTextSegmentAddress++;
 			sscanf(line, "%s %[^\n]", memory.text_segment[text_segment_index].instruction, memory.text_segment[text_segment_index].operands);
-			//printf("Instruction code should be: %s\n", memory.text_segment[text_segment_index].instruction);
 			memory.text_segment[text_segment_index].instruction_code = assignInstructionCode(memory.text_segment[text_segment_index].instruction);
+			//printf("Instruction code should be: %s\n", memory.text_segment[text_segment_index].instruction);
 			//printf("Instruction code assigned as: %d\n", memory.text_segment[text_segment_index].instruction_code);
 			text_segment_index++;
 		} else if(currentSegment == data) { // In Data Segment

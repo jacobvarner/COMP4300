@@ -10,6 +10,7 @@ Memory memory;
 int program_counter;
 int num_cycles;
 int instruction_count;
+int run;
 int registers[NUM_REGISTERS];
 
 // $29 - syscall parameters / return values
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
 	program_counter = 0;
   num_cycles = 0;
   instruction_count = 0;
-	int run = 1;
+	run = 1;
 	Text currentText;
 	int currentInstructionCode;
 	while (run) {
@@ -262,14 +263,34 @@ void subi(string operands) {
 	int32 rdest, rsrc1, imm;
 	sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
 	registers[rdest] = registers[rsrc1] - registers[imm];
-  num_cycles += 6;
-  instruction_count++;
+  	num_cycles += 6;
+  	instruction_count++;
 }
 
 void syscall() {
   int32 service_num = registers[29];
   int32 arg1 = registers[30];
   int32 arg2 = registers[31];
+  switch(service_num) {
+  	case 0:
+  		readString();
+  	case 1:
+  		writeString();
+  	case 2:
+  		run = 0;
+  }
   num_cycles += 8;
   instruction_count++;
 }
+
+void readString() {
+	string input;
+	scanf("%s", input);
+	string lengthOfInput = strlen(input);
+}
+
+void writeString() {
+	printf("%s", strings[register[31]]);
+}
+
+

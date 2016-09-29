@@ -73,6 +73,26 @@ int assignInstructionCode(string instruction) {
 		output = 3;
 	} else if (strcmp(instruction, "END") == 0) {
 		output = 4;
+	} else if (strcmp(instruction, "ADDI") == 0) {
+		output = 5
+	} else if (strcmp(instruction, "B") == 0) {
+		output = 6
+	} else if (strcmp(instruction, "BEQZ") == 0) {
+		output = 7
+	} else if (strcmp(instruction, "BGE") == 0) {
+		output = 8
+	} else if (strcmp(instruction, "BNE") == 0) {
+		output = 9
+	} else if (strcmp(instruction, "LA") == 0) {
+		output = 10
+	} else if (strcmp(instruction, "LB") == 0) {
+		output = 11
+	} else if (strcmp(instruction, "LI") == 0) {
+		output = 12
+	} else if (strcmp(instruction, "SUBI") == 0) {
+		output = 13
+	} else if (strcmp(instruction, "SYSCALL") == 0) {
+		output = 14
 	} else {
 		printf("Not an instruction!");
 	}

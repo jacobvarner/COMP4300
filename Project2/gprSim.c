@@ -8,7 +8,8 @@
 
 Memory memory;
 int program_counter;
-int time;
+int num_cycles;
+int instruction_count;
 int registers[NUM_REGISTERS];
 
 void load(string operands);
@@ -36,7 +37,8 @@ int main(int argc, char *argv[]) {
 	printf("\nLoading complete!\n\n");
 
 	program_counter = 0;
-  time = 0;
+  num_cycles = 0;
+  instruction_count = 0;
 	int run = 1;
 	Text currentText;
 	int currentInstructionCode;
@@ -96,12 +98,25 @@ int main(int argc, char *argv[]) {
 		program_counter++;
 	}
 
-	printf("\nRESULTS:\n\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
-	memory.data_segment[0].operands, memory.data_segment[0].content,
-	memory.data_segment[1].operands, memory.data_segment[1].content,
-	memory.data_segment[2].operands, memory.data_segment[2].content,
-	memory.data_segment[3].operands, memory.data_segment[3].content,
-	memory.data_segment[4].operands, memory.data_segment[4].content);
+  double speedup = (8 * instruction_count) / num_cycles;
+
+  // Output summary
+	printf("\nRESULTS:\n\nRegister[0]: %d\nRegister[1]: %d\nRegister[2]: %d\n" +
+  "Register[3]: %d\nRegister[4]: %d\nRegister[5]: %d\nRegister[6]: %d\n" +
+  "Register[7]: %d\nRegister[8]: %d\nRegister[9]: %d\nRegister[10]: %d\n" +
+  "Register[11]: %d\nRegister[12]: %d\nRegister[13]: %d\nRegister[14]: %d\n" +
+  "Register[15]: %d\nRegister[16]: %d\nRegister[17]: %d\nRegister[18]: %d\n" +
+  "Register[19]: %d\nRegister[20]: %d\nRegister[21]: %d\nRegister[22]: %d\n" +
+  "Register[23]: %d\nRegister[24]: %d\nRegister[25]: %d\nRegister[26]: %d\n" +
+  "Register[27]: %d\nRegister[28]: %d\nRegister[29]: %d\nRegister[30]: %d\n" +
+  "Register[31]: %d\n\nC = %d\nIC = %d\n[8*IC]/C = %d\n\n", registers[0],
+  registers[1], registers[2], registers[3], registers[4], registers[5],
+  registers[6], registers[7], registers[8], registers[9], registers[10],
+  registers[11], registers[12], registers[13], registers[14], registers[15],
+  registers[16], registers[17], registers[18], registers[19], registers[20],
+  registers[21], registers[22], registers[23], registers[24], registers[25],
+  registers[26], registers[27], registers[28], registers[29], registers[30],
+  registers[31], num_cycles, instruction_count, speedup);
 
 	return 0;
 }
@@ -169,14 +184,16 @@ void addi(string operands) {
   sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
   int32 answer = registers[rsrc1] + imm;
   registers[rdest] = answer;
-  time += 6;
+  num_cycles += 6;
+  instruction_count++;
 }
 
 void b(string operands) {
 	int32 label;
 	sscanf(operands, "%d", label);
 	program_counter += label;
-  time += 4;
+  num_cycles += 4;
+  instruction_count++;
 }
 
 void beqz(string operands) {
@@ -185,7 +202,8 @@ void beqz(string operands) {
 	if(registers[rsrc1] == 0) {
 		program_counter += label;
 	}
-  time += 5;
+  num_cycles += 5;
+  instruction_count++;
 }
 
 void bge(string operands) {
@@ -194,7 +212,8 @@ void bge(string operands) {
 	if(registers[rsrc1] >= registers[rsrc2]) {
 		program_counter += label;
 	}
-  time += 5;
+  num_cycles += 5;
+  instruction_count++;
 }
 
 void bne(string operands) {
@@ -203,7 +222,8 @@ void bne(string operands) {
 	if(registers[rsrc1] != registers[rsrc2]) {
 		program_counter += label;
 	}
-  time += 5;
+  num_cycles += 5;
+  instruction_count++;
 }
 
 void la(string operands) {
@@ -211,7 +231,8 @@ void la(string operands) {
   int32 label;
   sscanf(operands, "%*c%d %d", &rdest, &label);
   registers[rdest] = label;
-  time += 5;
+  num_cycles += 5;
+  instruction_count++;
 }
 
 void lb(string operands) {
@@ -220,7 +241,8 @@ void lb(string operands) {
   int32 rsrc1;
   sscanf(operands, "%*c%d %d %*c%d", &rdest, &offset, &rsrc1);
   registers[rdest] = registers[rsrc1 + offset];
-  time += 6;
+  num_cycles += 6;
+  instruction_count++;
 }
 
 void li(string operands) {
@@ -228,16 +250,19 @@ void li(string operands) {
   int32 imm;
   sscanf(operands, "%*c%d %d", &rdest, &imm);
   registers[rdest] = imm;
-  time += 3;
+  num_cycles += 3;
+  instruction_count++;
 }
 
 void subi(string operands) {
 	int32 rdest, rsrc1, imm;
 	sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
 	registers[rdest] = registers[rsrc1] - registers[imm];
-  time += 6;
+  num_cycles += 6;
+  instruction_count++;
 }
 
 void syscall(string operands) {
-  time += 8;
+  num_cycles += 8;
+  instruction_count++;
 }

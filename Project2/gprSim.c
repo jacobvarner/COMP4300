@@ -170,7 +170,7 @@ void addi(string operands) {
 }
 
 void b(string operands) {
-	string offset;
+	int32 offset;
 	sscanf(operands, "%d", offset);
 	program_counter += offset;
 }

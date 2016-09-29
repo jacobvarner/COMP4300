@@ -1,0 +1,48 @@
+GROUP 12 - Jacob Varner (jsv0004) & Tarence Beard (teb0016)
+COMP 4300 - Project 1: stackSim & accumSim
+9/8/2016
+
+*******************************************
+
+USAGE>>>
+
+To compile both programs: $ make
+
+To run Stack Simulator: $ ./stack_sim stackCode
+* second parameter (stackCode) should be the filename of the Stack assembly code
+that is to be run through the simulator.
+
+To run Accumulator Simulator: $ ./accum_sim accumCode
+* second parameter (accumCode) should be the filename of the Accumulator
+assembly code that is to be run through the simulator.
+
+*******************************************
+
+FILES>>>
+
+read.c:
+* reads data from the Text and Data segments
+
+loader.c:
+* reads the corresponding assembly file line by line and moves the data into the
+corresponding memory (Text of Data)
+* while reading instructions, it assigns the OpCode to each instruction
+
+stackSim.c
+* from the instructions that have been loaded into memory, each is loaded onto
+the stack and the corresponding actions are carried output
+* to follow along, the program also outputs the stack after each operation and
+at the very end the final .data section is output as well
+
+accumSim.c
+* from the instructions that have been loaded into memory, each is carried out
+using the accumulator and the .data section
+* to follow along, the program also outputs the accumulator value and each item
+in the .data section after each operation and at the very end the final values
+are output as well
+
+*******************************************
+
+ISSUES>>>
+
+No known issues at the moment

@@ -13,6 +13,16 @@ void load(string operand);
 void sto(string operand);
 void add(string operand);
 void multiply(string operand);
+void addi();
+void b();
+void beqz();
+void bge();
+void bne();
+void la();
+void lb();
+void li();
+void subi();
+void syscall();
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -48,34 +58,34 @@ int main(int argc, char *argv[]) {
 				run = 0;
 				break;
       case 5 : //ADDI
-				//TODO
+				addi()
 				break;
       case 6 : //B
-				//TODO
+				b()
 				break;
       case 7 : //BEQZ
-				//TODO
+				beqz()
 				break;
       case 8 : //BGE
-				//TODO
+				bge()
 				break;
       case 9 : //BNE
-				//TODO
+				bne()
 				break;
       case 10 : //LA
-				//TODO
+				la()
 				break;
       case 11 : //LB
-				//TODO
+				lb()
 				break;
       case 12 : //LI
-				//TODO
+				li()
 				break;
       case 13 : //SUBI
-				//TODO
+				subi()
 				break;
       case 14 : //SYSCALL
-				//TODO
+				syscall()
 				break;
 			default :
 				run = 0;
@@ -147,4 +157,44 @@ void multiply(string operand) {
 	memory.data_segment[2].operand, memory.data_segment[2].content,
 	memory.data_segment[3].operand, memory.data_segment[3].content,
 	memory.data_segment[4].operand, memory.data_segment[4].content);
+}
+
+void addi() {
+
+}
+
+void b() {
+
+}
+
+void beqz() {
+
+}
+
+void bge() {
+
+}
+
+void bne() {
+
+}
+
+void la() {
+
+}
+
+void lb() {
+
+}
+
+void li() {
+
+}
+
+void subi() {
+
+}
+
+void syscall() {
+
 }

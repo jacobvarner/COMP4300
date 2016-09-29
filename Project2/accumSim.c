@@ -4,8 +4,10 @@
 #include "memory.h"
 #include "read.h"
 
+#define NUM_REGISTERS 32;
+
 Memory memory;
-int accumulator;
+int registers[NUM_REGISTERS];
 
 void load(string operand);
 void sto(string operand);

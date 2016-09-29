@@ -159,8 +159,13 @@ void multiply(string operands) {
 	memory.data_segment[4].operands, memory.data_segment[4].content);
 }
 
-void addi() {
-
+void addi(string operands) {
+  int rdest;
+  int rsrc1;
+  int imm;
+  sscanf(operands, "%*c%d %*c%d %d", rdest, rsrc1, imm);
+  int answer = registers[rsrc1] + imm;
+  registers[rdest] = answer;
 }
 
 void b() {

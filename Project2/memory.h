@@ -16,12 +16,12 @@ typedef struct text {
 	int32 address;
 	string instruction;
 	int32 instruction_code;
-	string operand;
+	string operands;
 } Text;
 
 typedef struct data {
 	int32 address;
-	string operand;
+	string operands;
 	int32 content;
 } Data;
 

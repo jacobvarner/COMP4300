@@ -29,7 +29,7 @@ Memory loadProgramIntoMemory(char program_file_path[]) {
 			}
 			memory.text_segment[text_segment_index].address = nextTextSegmentAddress;
 			nextTextSegmentAddress++;
-			sscanf(line, "%s %s", memory.text_segment[text_segment_index].instruction, memory.text_segment[text_segment_index].operand);
+			sscanf(line, "%s %[^\n]", memory.text_segment[text_segment_index].instruction, memory.text_segment[text_segment_index].operands);
 			//printf("Instruction code should be: %s\n", memory.text_segment[text_segment_index].instruction);
 			memory.text_segment[text_segment_index].instruction_code = assignInstructionCode(memory.text_segment[text_segment_index].instruction);
 			//printf("Instruction code assigned as: %d\n", memory.text_segment[text_segment_index].instruction_code);
@@ -41,7 +41,7 @@ Memory loadProgramIntoMemory(char program_file_path[]) {
 			}
 			memory.data_segment[data_segment_index].address = nextDataSegmentAddress;
 			nextDataSegmentAddress++;
-			sscanf(line, "%s %d", memory.data_segment[data_segment_index].operand, &memory.data_segment[data_segment_index].content);
+			sscanf(line, "%s %d", memory.data_segment[data_segment_index].operands, &memory.data_segment[data_segment_index].content);
 			data_segment_index++;
 		}
 		printf("%s", line);

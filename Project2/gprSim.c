@@ -5,6 +5,7 @@
 #include "read.h"
 
 #define NUM_REGISTERS 32;
+#define NUM_STRINGS 3;
 
 Memory memory;
 int program_counter;
@@ -12,6 +13,7 @@ int num_cycles;
 int instruction_count;
 int run;
 int registers[NUM_REGISTERS];
+string strings[NUM_STRINGS];
 
 // $29 - syscall parameters / return values
 // $30 - syscall parameters
@@ -33,13 +35,17 @@ void subi(string operands);
 void syscall(string operands);
 
 int main(int argc, char *argv[]) {
-  if (argc != 2) {
+  if (argc != 3) {
     printf("You must provide an assembly file to be read.");
     return 1; /* Error: Must provide assembly file to be read. */
   }
 	printf("Loading into memory...\n\n");
 	memory = loadProgramIntoMemory(argv[1]);
 	printf("\nLoading complete!\n\n");
+
+  strings[0] = argv[2];
+  strings[1] = "This is a palindrome :)";
+  strings[2] = "This is not a palindrome :(";
 
 	program_counter = 0;
   num_cycles = 0;
@@ -235,7 +241,7 @@ void la(string operands) {
   int32 rdest;
   int32 label;
   sscanf(operands, "%*c%d %d", &rdest, &label);
-  registers[rdest] = label;
+  registers[rdest] = memory.data_segment[label].content;
   num_cycles += 5;
   instruction_count++;
 }
@@ -243,9 +249,8 @@ void la(string operands) {
 void lb(string operands) {
   int32 rdest;
   int32 offset;
-  int32 rsrc1;
-  sscanf(operands, "%*c%d %d %*c%d", &rdest, &offset, &rsrc1);
-  registers[rdest] = registers[rsrc1 + offset];
+  sscanf(operands, "%*c%d %d %*c%d", &rdest, &offset);
+  registers[rdest] = strings[0][offset];
   num_cycles += 6;
   instruction_count++;
 }

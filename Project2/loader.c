@@ -44,6 +44,9 @@ Memory loadProgramIntoMemory(char program_file_path[]) {
 			nextDataSegmentAddress++;
 			sscanf(line, "%s %d", memory.data_segment[data_segment_index].operands, &memory.data_segment[data_segment_index].content);
 			data_segment_index++;
+		} else if (line[0] == '#') {
+			continue;
+		}
 		}
 		printf("%s", line);
 		if (line[0] == 'E') {

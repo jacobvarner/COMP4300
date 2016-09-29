@@ -7,6 +7,7 @@
 #define NUM_REGISTERS 32;
 
 Memory memory;
+int program_counter;
 int registers[NUM_REGISTERS];
 
 void load(string operands);
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
 	memory = loadProgramIntoMemory(argv[1]);
 	printf("\nLoading complete!\n\n");
 
-	int program_counter = 0;
+	program_counter = 0;
 	int run = 1;
 	Text currentText;
 	int currentInstructionCode;
@@ -168,8 +169,10 @@ void addi(string operands) {
   registers[rdest] = answer;
 }
 
-void b() {
-
+void b(string operands) {
+	string offset;
+	sscanf(operands, "%d", offset);
+	program_counter += offset;
 }
 
 void beqz() {
@@ -205,6 +208,6 @@ void subi(string operands) {
 	registers[rdest] = registers[rsrc1] - registers[imm];
 }
 
-void syscall() {
-
+void syscall(string operands) {
+	 
 }

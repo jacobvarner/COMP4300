@@ -12,6 +12,10 @@ int num_cycles;
 int instruction_count;
 int registers[NUM_REGISTERS];
 
+// $29 - syscall parameters / return values
+// $30 - syscall parameters
+// $31 - syscall parameters
+
 void load(string operands);
 void sto(string operands);
 void add(string operands);
@@ -90,7 +94,7 @@ int main(int argc, char *argv[]) {
 				subi(currentText.operands)
 				break;
       case 14 : //SYSCALL
-				syscall(currentText.operands)
+				syscall()
 				break;
 			default :
 				run = 0;
@@ -262,7 +266,10 @@ void subi(string operands) {
   instruction_count++;
 }
 
-void syscall(string operands) {
+void syscall() {
+  int32 service_num = registers[29];
+  int32 arg1 = registers[30];
+  int32 arg2 = registers[31];
   num_cycles += 8;
   instruction_count++;
 }

@@ -47,6 +47,36 @@ int main(int argc, char *argv[]) {
 			case 4 : //END
 				run = 0;
 				break;
+      case 5 : //ADDI
+				//TODO
+				break;
+      case 6 : //B
+				//TODO
+				break;
+      case 7 : //BEQZ
+				//TODO
+				break;
+      case 8 : //BGE
+				//TODO
+				break;
+      case 9 : //BNE
+				//TODO
+				break;
+      case 10 : //LA
+				//TODO
+				break;
+      case 11 : //LB
+				//TODO
+				break;
+      case 12 : //LI
+				//TODO
+				break;
+      case 13 : //SUBI
+				//TODO
+				break;
+      case 14 : //SYSCALL
+				//TODO
+				break;
 			default :
 				run = 0;
 		}

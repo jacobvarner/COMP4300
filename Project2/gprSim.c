@@ -161,11 +161,11 @@ void multiply(string operands) {
 }
 
 void addi(string operands) {
-  int rdest;
-  int rsrc1;
-  int imm;
+  int32 rdest;
+  int32 rsrc1;
+  int32 imm;
   sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
-  int answer = registers[rsrc1] + imm;
+  int32 answer = registers[rsrc1] + imm;
   registers[rdest] = answer;
 }
 
@@ -187,17 +187,24 @@ void bne() {
 
 }
 
-void la() {
-
+void la(string operands) {
+  int32 rdest;
+  int32 label;
+  sscanf(operands, "%*c%d %d", &rdest, &label);
+  registers[rdest] = label;
 }
 
-void lb() {
-
+void lb(string operands) {
+  int32 rdest;
+  int32 offset;
+  int32 rsrc1;
+  sscanf(operands, "%*c%d %d %*c%d", &rdest, &offset, &rsrc1);
+  registers[rdest] = registers[rsrc1 + offset];
 }
 
 void li(string operands) {
-  int rdest;
-  int imm;
+  int32 rdest;
+  int32 imm;
   sscanf(operands, "%*c%d %d", &rdest, &imm);
   registers[rdest] = imm;
 }
@@ -209,5 +216,5 @@ void subi(string operands) {
 }
 
 void syscall(string operands) {
-	 
+
 }

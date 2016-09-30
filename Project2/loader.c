@@ -21,7 +21,9 @@ Memory loadProgramIntoMemory(char program_file_path[]) {
 	int32 nextDataSegmentAddress = DATA_SEGMENT_BASE_ADDRESS;
 	while(fgets(line, SIZE_OF_BUFFER, program_file_ptr) != NULL) {
 		//printf("Loop start \n");
-		if(line[0] == '.') {
+		if (line[0] == '#') {
+		  continue;
+	  } else if(line[0] == '.') {
 			setCurrentSegment(line);
 		} else if(currentSegment == text) {
 			if (line[0] == '\n') {
@@ -44,9 +46,6 @@ Memory loadProgramIntoMemory(char program_file_path[]) {
 			nextDataSegmentAddress++;
 			sscanf(line, "%s %d", memory.data_segment[data_segment_index].operands, &memory.data_segment[data_segment_index].content);
 			data_segment_index++;
-		} else if (line[0] == '#') {
-			continue;
-		}
 		}
 		printf("%s", line);
 		if (line[0] == 'E') {
@@ -77,26 +76,26 @@ int assignInstructionCode(string instruction) {
 		output = 3;
 	} else if (strcmp(instruction, "END") == 0) {
 		output = 4;
-	} else if (strcmp(instruction, "ADDI") == 0) {
-		output = 5
-	} else if (strcmp(instruction, "B") == 0) {
-		output = 6
-	} else if (strcmp(instruction, "BEQZ") == 0) {
-		output = 7
-	} else if (strcmp(instruction, "BGE") == 0) {
-		output = 8
-	} else if (strcmp(instruction, "BNE") == 0) {
-		output = 9
-	} else if (strcmp(instruction, "LA") == 0) {
-		output = 10
-	} else if (strcmp(instruction, "LB") == 0) {
-		output = 11
-	} else if (strcmp(instruction, "LI") == 0) {
-		output = 12
-	} else if (strcmp(instruction, "SUBI") == 0) {
-		output = 13
-	} else if (strcmp(instruction, "SYSCALL") == 0) {
-		output = 14
+	} else if (strcmp(instruction, "addi") == 0) {
+		output = 5;
+	} else if (strcmp(instruction, "b") == 0) {
+		output = 6;
+	} else if (strcmp(instruction, "beqz") == 0) {
+		output = 7;
+	} else if (strcmp(instruction, "bge") == 0) {
+		output = 8;
+	} else if (strcmp(instruction, "bne") == 0) {
+		output = 9;
+	} else if (strcmp(instruction, "la") == 0) {
+		output = 10;
+	} else if (strcmp(instruction, "lb") == 0) {
+		output = 11;
+	} else if (strcmp(instruction, "li") == 0) {
+		output = 12;
+	} else if (strcmp(instruction, "subi") == 0) {
+		output = 13;
+	} else if (strcmp(instruction, "syscall") == 0) {
+		output = 14;
 	} else {
 		printf("Not an instruction!");
 	}

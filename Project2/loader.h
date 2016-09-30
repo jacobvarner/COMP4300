@@ -1,7 +1,7 @@
 #ifndef LOADER_H_
 #define LOADER_H_
 
-#include "write.h"
+#include "memory.h"
 
 Memory loadProgramIntoMemory(char program_file_path[]);
 

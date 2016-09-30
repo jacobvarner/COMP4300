@@ -1,4 +1,4 @@
-## Jacob Varner & Tarence Beard -- 09/29/2016
+## Jacob Varner & Tarence Beard Jr. -- 09/29/2016
 ## Partially assembled code to work with our simulator gprSim.
 ##
 ## Register usage:

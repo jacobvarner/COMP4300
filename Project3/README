@@ -1,0 +1,38 @@
+GROUP 12 - Jacob Varner (jsv0004) & Tarence Beard Jr. (teb0016)
+COMP 4300 - Project 2: gprSim
+9/29/2016
+
+*******************************************
+
+USAGE>>>
+
+To compile program: $ make
+To run gprSiim: $ ./gprSim <assembly-file> <palindrome-test-subject>
+Example: ./gprSim palindrome.s racecar
+
+*******************************************
+
+FILES>>>
+
+read.c:
+* reads data from the Text and Data segments.
+
+loader.c:
+* reads the corresponding assembly file line by line and moves the data into the
+corresponding memory (Text or Data).
+* while reading instructions, it assigns the OpCode to each instruction.
+
+gprSim.c
+* runs each instruction based on where the program counter is pointing.
+* stores data in any of the 32 registers, although we only used 7.
+* we used registers[0] - registers[3] for the calculations and then
+registers[29] - registers[31] were used with the syscall function.
+* upon completion, gprSim outputs the instructions that were read in, whether or
+not the input was a palindrome, and then a summary of the registers along with
+values for C, IC, and speedup.
+
+*******************************************
+
+ISSUES>>>
+
+No known issues at the moment

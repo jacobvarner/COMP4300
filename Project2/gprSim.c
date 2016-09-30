@@ -1,11 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "loader.h"
 #include "memory.h"
 #include "read.h"
 
-#define NUM_REGISTERS 32;
-#define NUM_STRINGS 3;
+#define NUM_REGISTERS 32
+#define NUM_STRINGS 3
 
 Memory memory;
 int program_counter;
@@ -32,7 +33,9 @@ void la(string operands);
 void lb(string operands);
 void li(string operands);
 void subi(string operands);
-void syscall(string operands);
+void syscall();
+void readString();
+void writeString();
 
 int main(int argc, char *argv[]) {
   if (argc != 3) {
@@ -43,9 +46,9 @@ int main(int argc, char *argv[]) {
 	memory = loadProgramIntoMemory(argv[1]);
 	printf("\nLoading complete!\n\n");
 
-  strings[0] = argv[2];
-  strings[1] = "This is a palindrome :)";
-  strings[2] = "This is not a palindrome :(";
+  strcpy(strings[0], argv[2]);
+  strcpy(strings[1], "This is a palindrome :)");
+  strcpy(strings[2], "This is not a palindrome :(");
 
 	program_counter = 0;
   num_cycles = 0;
@@ -57,6 +60,7 @@ int main(int argc, char *argv[]) {
 		currentText = loadText(program_counter + TEXT_SEGMENT_BASE_ADDRESS, memory);
 		//printf("%s \n", currentText.instruction);
 		currentInstructionCode = currentText.instruction_code;
+
 		switch (currentInstructionCode) {
 			case 0 : //LOAD
 				load(currentText.operands);
@@ -74,34 +78,34 @@ int main(int argc, char *argv[]) {
 				run = 0;
 				break;
       case 5 : //ADDI
-				addi(currentText.operands)
+				addi(currentText.operands);
 				break;
       case 6 : //B
-				b(currentText.operands)
+				b(currentText.operands);
 				break;
       case 7 : //BEQZ
-				beqz(currentText.operands)
+				beqz(currentText.operands);
 				break;
       case 8 : //BGE
-				bge(currentText.operands)
+				bge(currentText.operands);
 				break;
       case 9 : //BNE
-				bne(currentText.operands)
+				bne(currentText.operands);
 				break;
       case 10 : //LA
-				la(currentText.operands)
+				la(currentText.operands);
 				break;
       case 11 : //LB
-				lb(currentText.operands)
+				lb(currentText.operands);
 				break;
       case 12 : //LI
-				li(currentText.operands)
+				li(currentText.operands);
 				break;
       case 13 : //SUBI
-				subi(currentText.operands)
+				subi(currentText.operands);
 				break;
       case 14 : //SYSCALL
-				syscall()
+				syscall();
 				break;
 			default :
 				run = 0;
@@ -109,24 +113,13 @@ int main(int argc, char *argv[]) {
 		program_counter++;
 	}
 
-  double speedup = (8 * instruction_count) / num_cycles;
+  double speedup = (8 * (double)instruction_count) / (double)num_cycles;
 
   // Output summary
-	printf("\nRESULTS:\n\nRegister[0]: %d\nRegister[1]: %d\nRegister[2]: %d\n" +
-  "Register[3]: %d\nRegister[4]: %d\nRegister[5]: %d\nRegister[6]: %d\n" +
-  "Register[7]: %d\nRegister[8]: %d\nRegister[9]: %d\nRegister[10]: %d\n" +
-  "Register[11]: %d\nRegister[12]: %d\nRegister[13]: %d\nRegister[14]: %d\n" +
-  "Register[15]: %d\nRegister[16]: %d\nRegister[17]: %d\nRegister[18]: %d\n" +
-  "Register[19]: %d\nRegister[20]: %d\nRegister[21]: %d\nRegister[22]: %d\n" +
-  "Register[23]: %d\nRegister[24]: %d\nRegister[25]: %d\nRegister[26]: %d\n" +
-  "Register[27]: %d\nRegister[28]: %d\nRegister[29]: %d\nRegister[30]: %d\n" +
-  "Register[31]: %d\n\nC = %d\nIC = %d\n[8*IC]/C = %d\n\n", registers[0],
-  registers[1], registers[2], registers[3], registers[4], registers[5],
-  registers[6], registers[7], registers[8], registers[9], registers[10],
-  registers[11], registers[12], registers[13], registers[14], registers[15],
-  registers[16], registers[17], registers[18], registers[19], registers[20],
-  registers[21], registers[22], registers[23], registers[24], registers[25],
-  registers[26], registers[27], registers[28], registers[29], registers[30],
+	printf("\nRESULTS:\n\nRegister[0]: %d\nRegister[1]: %d\nRegister[2]: %d\n\
+Register[3]: %d\nRegister[29]: %d\nRegister[30]: %d\n\
+Register[31]: %d\n\nC = %d\nIC = %d\n[8*IC]/C = %f\n\n", registers[0],
+  registers[1], registers[2], registers[3], registers[29], registers[30],
   registers[31], num_cycles, instruction_count, speedup);
 
 	return 0;
@@ -193,7 +186,9 @@ void addi(string operands) {
   int32 rsrc1;
   int32 imm;
   sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
+  //printf("ADDI: Destination: %d, Source: %d, Imm: %d\n", rdest, rsrc1, imm);
   int32 answer = registers[rsrc1] + imm;
+  //printf("Answer: %d\n", answer);
   registers[rdest] = answer;
   num_cycles += 6;
   instruction_count++;
@@ -201,7 +196,8 @@ void addi(string operands) {
 
 void b(string operands) {
 	int32 label;
-	sscanf(operands, "%d", label);
+	sscanf(operands, "%d", &label);
+  //printf("B: Label: %d\n", label);
 	program_counter += label;
   num_cycles += 4;
   instruction_count++;
@@ -209,7 +205,8 @@ void b(string operands) {
 
 void beqz(string operands) {
 	int32 label, rsrc1;
-	sscanf(operands, "%*c%d, %d", rsrc1, label);
+	sscanf(operands, "%*c%d %d", &rsrc1, &label);
+  //printf("BEQZ: Register[%d]: %d\n", rsrc1, registers[rsrc1]);
 	if(registers[rsrc1] == 0) {
 		program_counter += label;
 	}
@@ -219,7 +216,8 @@ void beqz(string operands) {
 
 void bge(string operands) {
 	int32 label, rsrc1, rsrc2;
-	sscanf(operands, "%*c%d, %d", rsrc1, rsrc2, label);
+	sscanf(operands, "%*c%d %*c%d %d", &rsrc1, &rsrc2, &label);
+  //printf("BGE: Source1: %d = %d, Source2: %d = %d, Label: %d\n", rsrc1, registers[rsrc1], rsrc2, registers[rsrc2], label);
 	if(registers[rsrc1] >= registers[rsrc2]) {
 		program_counter += label;
 	}
@@ -229,7 +227,8 @@ void bge(string operands) {
 
 void bne(string operands) {
 	int32 label, rsrc1, rsrc2;
-	sscanf(operands, "%*c%d, %d", rsrc1, rsrc2, label);
+	sscanf(operands, "%*c%d %*c%d %d", &rsrc1, &rsrc2, &label);
+  //printf("BNE: Source1: %d, Source2: %d, Label: %d\n", rsrc1, rsrc2, label);
 	if(registers[rsrc1] != registers[rsrc2]) {
 		program_counter += label;
 	}
@@ -241,6 +240,7 @@ void la(string operands) {
   int32 rdest;
   int32 label;
   sscanf(operands, "%*c%d %d", &rdest, &label);
+  //printf("LA: Destination: %d, Label: %d\n", rdest, label);
   registers[rdest] = memory.data_segment[label].content;
   num_cycles += 5;
   instruction_count++;
@@ -249,8 +249,9 @@ void la(string operands) {
 void lb(string operands) {
   int32 rdest;
   int32 offset;
-  sscanf(operands, "%*c%d %d %*c%d", &rdest, &offset);
-  registers[rdest] = strings[0][offset];
+  sscanf(operands, "%*c%d %*c%d", &rdest, &offset);
+  //printf("LB: Destination: %d, Offset: %d\n", rdest, offset);
+  registers[rdest] = strings[0][registers[offset]];
   num_cycles += 6;
   instruction_count++;
 }
@@ -259,6 +260,7 @@ void li(string operands) {
   int32 rdest;
   int32 imm;
   sscanf(operands, "%*c%d %d", &rdest, &imm);
+  //printf("LI: Destination: %d, Imm: %d\n", rdest, imm);
   registers[rdest] = imm;
   num_cycles += 3;
   instruction_count++;
@@ -267,7 +269,8 @@ void li(string operands) {
 void subi(string operands) {
 	int32 rdest, rsrc1, imm;
 	sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
-	registers[rdest] = registers[rsrc1] - registers[imm];
+  //printf("SUBI: Destination: %d, Source: %d, Imm: %d\n", rdest, rsrc1, imm);
+	registers[rdest] = registers[rsrc1] - imm;
   	num_cycles += 6;
   	instruction_count++;
 }
@@ -276,12 +279,14 @@ void syscall() {
   int32 service_num = registers[29];
   int32 arg1 = registers[30];
   int32 arg2 = registers[31];
-  switch(service_num) {
-  	case 0:
+  switch (service_num) {
+  	case 0 :
   		readString();
-  	case 1:
+      break;
+  	case 1 :
   		writeString();
-  	case 2:
+      break;
+  	case 2 :
   		run = 0;
   }
   num_cycles += 8;
@@ -289,13 +294,10 @@ void syscall() {
 }
 
 void readString() {
-	string input;
-	scanf("%s", input);
-	string lengthOfInput = strlen(input);
+	// Empty stub for now
+  //printf("readString()\n");
 }
 
 void writeString() {
-	printf("%s", strings[register[31]]);
+	printf("%s\n", strings[registers[31]]);
 }
-
-

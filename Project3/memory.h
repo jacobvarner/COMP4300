@@ -30,5 +30,32 @@ typedef struct Memory {
 	Data data_segment[MAX_SIZE_OF_MEMORY_SEGMENT];
 } Memory;
 
+typedef struct if_id {
+	int32 ir;
+}
+
+typedef struct id_ex {
+	int32 op_code;
+	int32 rs, rt, rd;
+	string op_A, op_B;
+	int32 offset;
+	int32 new_pc
+}
+
+typedef struct ex_mem {
+	int32 op_code;
+	int32 alu_out;
+	string op_B;
+	int32 rd;
+}
+
+typedef struct mem_wb {
+	int32 op_code;
+	int32 mdr;
+	string op_B;
+	int32 alu_out;
+	int32 rd;
+}
+
 
 #endif // MEMORY_H_

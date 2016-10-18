@@ -16,6 +16,12 @@ int run;
 int registers[NUM_REGISTERS];
 string strings[NUM_STRINGS];
 
+// Setting up latches
+if_id if_id_old, if_id_new;
+id_ex id_ex_old, id_ex_new;
+ex_mem ex_mem_old, ex_mem_new;
+mem_wb mem_wb_old, mem_wb_new;
+
 // $29 - syscall parameters / return values
 // $30 - syscall parameters
 // $31 - syscall parameters
@@ -37,6 +43,13 @@ void syscall();
 void readString();
 void writeString();
 
+int32 instr_fetch(int32 currentInstructionCode, int pc);
+id_ex instr_decode(int32 ir, int pc);
+ex_mem instr_exe(id_ex id_ex_old);
+mem_wb mem_access(ex_mem ex_mem_old);
+void write_back(mem_wb mem_wb_old, int gpr);
+
+
 int main(int argc, char *argv[]) {
   if (argc != 3) {
     printf("You must provide an assembly file to be read.");
@@ -56,10 +69,25 @@ int main(int argc, char *argv[]) {
 	run = 1;
 	Text currentText;
 	int currentInstructionCode;
+
 	while (run) {
-		currentText = loadText(program_counter + TEXT_SEGMENT_BASE_ADDRESS, memory);
+    currentText = loadText(program_counter + TEXT_SEGMENT_BASE_ADDRESS, memory);
 		//printf("%s \n", currentText.instruction);
 		currentInstructionCode = currentText.instruction_code;
+
+    if_id_old.ir = if_id_new.ir;
+    if_id_new.ir = instr_fetch(currentInstructionCode, &program_counter);
+
+    id_ex_old = id_ex_new;
+    id_ex_new = instr_decode(if_id_old.ir, &program_counter);
+
+    ex_mem_old = ex_mem_new;
+    ex_mem_new = instr_exe(id_ex_old);
+
+    mem_wb_old = mem_wb_new;
+    mem_wb_new = mem_access(ex_mem_old);
+
+    write_back(mem_wb_old, &registers);
 
 		switch (currentInstructionCode) {
 			case 0 : //LOAD
@@ -123,6 +151,26 @@ Register[31]: %d\n\nC = %d\nIC = %d\n[8*IC]/C = %f\n\n", registers[0],
   registers[31], num_cycles, instruction_count, speedup);
 
 	return 0;
+}
+
+int32 instr_fetch(int currentInstructionCode, int pc) {
+  // TODO
+}
+
+id_ex instr_decode(int32 ir, int pc) {
+  // TODO
+}
+
+ex_mem instr_exe(id_ex id_ex_old) {
+  // TODO
+}
+
+mem_wb mem_access(ex_mem ex_mem_old){
+  // TODO
+}
+
+void write_back(mem_wb mem_wb_old, int gpr) {
+  // TODO
 }
 
 void load(string operands) {

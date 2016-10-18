@@ -89,55 +89,6 @@ int main(int argc, char *argv[]) {
 
     write_back(mem_wb_old, &registers);
 
-		switch (currentInstructionCode) {
-			case 0 : //LOAD
-				load(currentText.operands);
-				break;
-			case 1 : //STO
-				sto(currentText.operands);
-				break;
-			case 2 : //ADD
-				add(currentText.operands);
-				break;
-			case 3 : //MULT
-				multiply(currentText.operands);
-				break;
-			case 4 : //END
-				run = 0;
-				break;
-      case 5 : //ADDI
-				addi(currentText.operands);
-				break;
-      case 6 : //B
-				b(currentText.operands);
-				break;
-      case 7 : //BEQZ
-				beqz(currentText.operands);
-				break;
-      case 8 : //BGE
-				bge(currentText.operands);
-				break;
-      case 9 : //BNE
-				bne(currentText.operands);
-				break;
-      case 10 : //LA
-				la(currentText.operands);
-				break;
-      case 11 : //LB
-				lb(currentText.operands);
-				break;
-      case 12 : //LI
-				li(currentText.operands);
-				break;
-      case 13 : //SUBI
-				subi(currentText.operands);
-				break;
-      case 14 : //SYSCALL
-				syscall();
-				break;
-			default :
-				run = 0;
-		}
 		program_counter++;
 	}
 
@@ -154,11 +105,81 @@ Register[31]: %d\n\nC = %d\nIC = %d\n[8*IC]/C = %f\n\n", registers[0],
 }
 
 int32 instr_fetch(int currentInstructionCode, int pc) {
-  // TODO
+
+  // Need to check for hazards
+
+  return currentInstructionCode;
 }
 
 id_ex instr_decode(int32 ir, int pc) {
-  // TODO
+
+  // Need to check for hazards
+
+  id_ex id_ex_output;
+
+  switch (ir) {
+    case 0 : //LOAD
+      load(currentText.operands);
+      break;
+    case 1 : //STO
+      sto(currentText.operands);
+      break;
+    case 2 : //ADD
+      add(currentText.operands);
+      break;
+    case 3 : //MULT
+      multiply(currentText.operands);
+      break;
+    case 4 : //END
+      run = 0;
+      break;
+    case 5 : //ADDI
+      int32 rd;
+      int32 rs;
+      int32 imm;
+      sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
+      id_ex_output.rd = rd;
+      id_ex_output.rs = rs;
+      id_ex_output.offset = imm;
+      id_ex_output.op_code = ir;
+      //addi(currentText.operands);
+      break;
+    case 6 : //B
+      int32 label;
+      sscanf(operands, "%d", &label);
+      id_ex_output.rs = label;
+      id_ex_output.op_code = ir;
+      b(currentText.operands);
+      break;
+    case 7 : //BEQZ
+      beqz(currentText.operands);
+      break;
+    case 8 : //BGE
+      bge(currentText.operands);
+      break;
+    case 9 : //BNE
+      bne(currentText.operands);
+      break;
+    case 10 : //LA
+      la(currentText.operands);
+      break;
+    case 11 : //LB
+      lb(currentText.operands);
+      break;
+    case 12 : //LI
+      li(currentText.operands);
+      break;
+    case 13 : //SUBI
+      subi(currentText.operands);
+      break;
+    case 14 : //SYSCALL
+      syscall();
+      break;
+    default :
+      run = 0;
+  }
+
+  return id_ex_output;
 }
 
 ex_mem instr_exe(id_ex id_ex_old) {

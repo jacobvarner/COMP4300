@@ -125,7 +125,16 @@ id_ex instr_decode(int32 ir, int pc) {
       sto(currentText.operands);
       break;
     case 2 : //ADD
-      add(currentText.operands);
+      int32 rd;
+      int32 rs;
+      int32 rt;
+      sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &rt);
+      id_ex_output.rd = rd;
+      id_ex_output.rs = rs;
+      id_ex_output.rt = rt;
+      id_ex_output.op_A = registers[rs];
+      id_ex_output.op_B = registers[rt];
+      id_ex_output.op_code = ir;
       break;
     case 3 : //MULT
       multiply(currentText.operands);
@@ -221,14 +230,63 @@ id_ex instr_decode(int32 ir, int pc) {
       id_ex_output.op_code = ir;
       break;
     default :
-      run = 0;
+
   }
 
   return id_ex_output;
 }
 
 ex_mem instr_exe(id_ex id_ex_old) {
-  // TODO
+  switch (id_ex_old.op_code) {
+    case 0 : //LOAD
+      load(currentText.operands);
+      break;
+    case 1 : //STO
+      sto(currentText.operands);
+      break;
+    case 2 : //ADD
+
+      break;
+    case 3 : //MULT
+      multiply(currentText.operands);
+      break;
+    case 4 : //END
+      run = 0;
+      break;
+    case 5 : //ADDI
+
+      break;
+    case 6 : //B
+
+      break;
+    case 7 : //BEQZ
+
+      break;
+    case 8 : //BGE
+
+      break;
+    case 9 : //BNE
+
+      break;
+    case 10 : //LA
+
+      break;
+    case 11 : //LB
+
+      break;
+    case 12 : //LI
+
+      break;
+    case 13 : //SUBI
+
+      break;
+    case 14 : //SYSCALL
+      
+      break;
+    default :
+
+  }
+  }
 }
 
 mem_wb mem_access(ex_mem ex_mem_old){

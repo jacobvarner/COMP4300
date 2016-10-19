@@ -140,40 +140,85 @@ id_ex instr_decode(int32 ir, int pc) {
       sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
       id_ex_output.rd = rd;
       id_ex_output.rs = rs;
-      id_ex_output.offset = imm;
+      id_ex_output.op_A = registers[rs];
+      id_ex_output.op_B = imm;
       id_ex_output.op_code = ir;
-      //addi(currentText.operands);
       break;
     case 6 : //B
       int32 label;
       sscanf(operands, "%d", &label);
-      id_ex_output.rs = label;
+      id_ex_output.rd = label;
       id_ex_output.op_code = ir;
-      b(currentText.operands);
       break;
     case 7 : //BEQZ
-      beqz(currentText.operands);
+      int32 label, rs;
+      sscanf(operands, "%*c%d %d", &rs, &label);
+      id_ex_output.rs = rs;
+      id_ex_output.rd = label;
+      id_ex_output.op_A = registers[rs];
+      id_ex_output.op_code = ir;
       break;
     case 8 : //BGE
-      bge(currentText.operands);
+      int32 label, rs, rt;
+      sscanf(operands, "%*c%d %*c%d %d", &rs, &rt, &label);
+      id_ex_output.rs = rs;
+      id_ex_output.rt = rt;
+      id_ex_output.rd = label;
+      id_ex_output.op_A = registers[rs];
+      id_ex_output.op_B = registers[rt];
+      id_ex_output.op_code = ir;
       break;
     case 9 : //BNE
-      bne(currentText.operands);
+      int32 label, rs, rt;
+      sscanf(operands, "%*c%d %*c%d %d", &rs, &rt, &label);
+      id_ex_output.rs = rs;
+      id_ex_output.rt = rt;
+      id_ex_output.rd = label;
+      id_ex_output.op_A = registers[rs];
+      id_ex_output.op_B = registers[rt];
+      id_ex_output.op_code = ir;
       break;
     case 10 : //LA
-      la(currentText.operands);
+      int32 rd;
+      int32 label;
+      sscanf(operands, "%*c%d %d", &rd, &label);
+      id_ex_output.rd = rd;
+      id_ex_output.rs = label;
+      id_ex_output.op_A = memory.data_segment[label].content;
+      id_ex_output.op_code = ir;
       break;
     case 11 : //LB
-      lb(currentText.operands);
+      int32 rd;
+      int32 offset;
+      sscanf(operands, "%*c%d %*c%d", &rd, &offset);
+      id_ex_output.rd = rd;
+      id_ex_output.offset = offset;
+      id_ex_output.op_code = ir;
       break;
     case 12 : //LI
-      li(currentText.operands);
+      int32 rd;
+      int32 imm;
+      sscanf(operands, "%*c%d %d", &rd, &imm);
+      id_ex_output.rd = rd;
+      id_ex_output.op_A = imm;
+      id_ex_output.op_code = ir;
       break;
     case 13 : //SUBI
-      subi(currentText.operands);
+      int32 rd, rs, imm;
+      sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
+      id_ex_output.rd = rd;
+      id_ex_output.rs = rs;
+      id_ex_output.op_A = registers[rs];
+      id_ex_output.op_B = imm;
+      id_ex_output.op_code = ir;
       break;
     case 14 : //SYSCALL
-      syscall();
+      id_ex_output.rd = 29;
+      id_ex_output.rs = 30;
+      id_ex_output.rt = 31;
+      id_ex_output.op_A = registers[rs];
+      id_ex_output.op_B = registers[rt];
+      id_ex_output.op_code = ir;
       break;
     default :
       run = 0;

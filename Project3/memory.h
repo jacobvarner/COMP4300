@@ -37,7 +37,7 @@ typedef struct if_id {
 typedef struct id_ex {
 	int32 op_code;
 	int32 rs, rt, rd;
-	string op_A, op_B;
+	int32 op_A, op_B;
 	int32 offset;
 	int32 new_pc
 }
@@ -45,14 +45,14 @@ typedef struct id_ex {
 typedef struct ex_mem {
 	int32 op_code;
 	int32 alu_out;
-	string op_B;
+	int32 op_B;
 	int32 rd;
 }
 
 typedef struct mem_wb {
 	int32 op_code;
 	int32 mdr;
-	string op_B;
+	int32 op_B;
 	int32 alu_out;
 	int32 rd;
 }

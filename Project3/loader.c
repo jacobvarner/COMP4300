@@ -96,6 +96,8 @@ int assignInstructionCode(string instruction) {
 		output = 13;
 	} else if (strcmp(instruction, "syscall") == 0) {
 		output = 14;
+	} else if (strcmp(instruction, "nop") == 0) {
+		output = 15;
 	} else {
 		printf("Not an instruction!");
 	}

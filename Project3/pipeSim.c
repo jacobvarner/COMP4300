@@ -28,18 +28,18 @@ mem_wb mem_wb_old, mem_wb_new;
 
 void load(string operands);
 void sto(string operands);
-void add(string operands);
+ex_mem add(int32 rd, int32 op_A, int32 op_B);
 void multiply(string operands);
-void addi(string operands);
-void b(string operands);
-void beqz(string operands);
-void bge(string operands);
-void bne(string operands);
-void la(string operands);
-void lb(string operands);
-void li(string operands);
-void subi(string operands);
-void syscall();
+ex_mem addi(int32 rd, int32 op_A, int32 op_B);
+ex_mem b(string operands);
+ex_mem beqz(string operands);
+ex_mem bge(string operands);
+ex_mem bne(string operands);
+ex_mem la(string operands);
+ex_mem lb(string operands);
+ex_mem li(string operands);
+ex_mem subi(string operands);
+ex_mem syscall();
 void readString();
 void writeString();
 
@@ -229,6 +229,9 @@ id_ex instr_decode(int32 ir, int pc) {
       id_ex_output.op_B = registers[rt];
       id_ex_output.op_code = ir;
       break;
+    case 15 : //NOP
+      // TODO
+      break;
     default :
 
   }
@@ -236,8 +239,9 @@ id_ex instr_decode(int32 ir, int pc) {
   return id_ex_output;
 }
 
-ex_mem instr_exe(id_ex id_ex_old) {
-  switch (id_ex_old.op_code) {
+ex_mem instr_exe(id_ex id_ex) {
+  ex_mem output;
+  switch (id_ex.op_code) {
     case 0 : //LOAD
       load(currentText.operands);
       break;
@@ -245,7 +249,7 @@ ex_mem instr_exe(id_ex id_ex_old) {
       sto(currentText.operands);
       break;
     case 2 : //ADD
-
+      output = add(id_ex.rd, id_ex.op_A, id_ex.op_B);
       break;
     case 3 : //MULT
       multiply(currentText.operands);
@@ -254,39 +258,43 @@ ex_mem instr_exe(id_ex id_ex_old) {
       run = 0;
       break;
     case 5 : //ADDI
-
+      output = addi(id_ex.rd, id_ex.op_A, id_ex.op_B);
       break;
     case 6 : //B
-
+      output = b(id_ex.rd);
       break;
     case 7 : //BEQZ
-
+      output = beqz(id_ex.rd, id_ex.op_A);
       break;
     case 8 : //BGE
-
+      output = bge(id_ex.rd, id_ex.op_A, id_ex.op_B);
       break;
     case 9 : //BNE
-
+      output = bne(id_ex.rd, id_ex.op_A, id_ex.op_B);
       break;
     case 10 : //LA
-
+      output = la(id_ex.rd, id_ex.op_A);
       break;
     case 11 : //LB
-
+      output = lb(id_ex.rd, id_ex.op_A, id_ex.offset);
       break;
     case 12 : //LI
-
+      output = li(id_ex.rd, id_ex.op_A);
       break;
     case 13 : //SUBI
-
+      output = subi(id_ex.rd, id_ex.op_A, id_ex.op_B);
       break;
     case 14 : //SYSCALL
-      
+      output = syscall();
+      break;
+    case 15 : //NOP
+      // TODO
       break;
     default :
 
   }
-  }
+
+  return output;
 }
 
 mem_wb mem_access(ex_mem ex_mem_old){
@@ -324,19 +332,15 @@ void sto(string operands) {
 	memory.data_segment[4].operands, memory.data_segment[4].content);
 }
 
-void add(string operands) {
+ex_mem add(int32 rd, int32 op_A, int32 op_B) {
+  ex_mem ouput;
 	int sum = 0;
   int32 address = (int32)strtol(operands, NULL, 0);
 	Data data = loadData(address, memory);
   sum += data.content;
   sum += registers[0];
   registers[0] = sum;
-  printf("\nStatus:\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
-	memory.data_segment[0].operands, memory.data_segment[0].content,
-	memory.data_segment[1].operands, memory.data_segment[1].content,
-	memory.data_segment[2].operands, memory.data_segment[2].content,
-	memory.data_segment[3].operands, memory.data_segment[3].content,
-	memory.data_segment[4].operands, memory.data_segment[4].content);
+  return output;
 }
 
 void multiply(string operands) {
@@ -353,29 +357,30 @@ void multiply(string operands) {
 	memory.data_segment[4].operands, memory.data_segment[4].content);
 }
 
-void addi(string operands) {
-  int32 rdest;
-  int32 rsrc1;
-  int32 imm;
-  sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
+ex_mem addi(int32 rd, int32 op_A, int32 op_B) {
+  ex_mem output;
   //printf("ADDI: Destination: %d, Source: %d, Imm: %d\n", rdest, rsrc1, imm);
-  int32 answer = registers[rsrc1] + imm;
+  int32 answer = op_A + op_B;
   //printf("Answer: %d\n", answer);
-  registers[rdest] = answer;
+  registers[rd] = answer;
   num_cycles += 6;
   instruction_count++;
+  return output;
 }
 
-void b(string operands) {
-	int32 label;
+ex_mem b(int32 rd) {
+	ex_mem output;
+  int32 label;
 	sscanf(operands, "%d", &label);
   //printf("B: Label: %d\n", label);
 	program_counter += label;
   num_cycles += 4;
   instruction_count++;
+  return output;
 }
 
-void beqz(string operands) {
+ex_mem beqz(int32 rd, int32 op_A) {
+  ex_mem output;
 	int32 label, rsrc1;
 	sscanf(operands, "%*c%d %d", &rsrc1, &label);
   //printf("BEQZ: Register[%d]: %d\n", rsrc1, registers[rsrc1]);
@@ -384,9 +389,11 @@ void beqz(string operands) {
 	}
   num_cycles += 5;
   instruction_count++;
+  return output;
 }
 
-void bge(string operands) {
+ex_mem bge(int32 rd, int32 op_A, int32 op_B) {
+  ex_mem output;
 	int32 label, rsrc1, rsrc2;
 	sscanf(operands, "%*c%d %*c%d %d", &rsrc1, &rsrc2, &label);
   //printf("BGE: Source1: %d = %d, Source2: %d = %d, Label: %d\n", rsrc1, registers[rsrc1], rsrc2, registers[rsrc2], label);
@@ -395,9 +402,11 @@ void bge(string operands) {
 	}
   num_cycles += 5;
   instruction_count++;
+  return output;
 }
 
-void bne(string operands) {
+ex_mem bne(int32 rd, int32 op_A, int32 op_B) {
+  ex_mem output;
 	int32 label, rsrc1, rsrc2;
 	sscanf(operands, "%*c%d %*c%d %d", &rsrc1, &rsrc2, &label);
   //printf("BNE: Source1: %d, Source2: %d, Label: %d\n", rsrc1, rsrc2, label);
@@ -406,9 +415,11 @@ void bne(string operands) {
 	}
   num_cycles += 5;
   instruction_count++;
+  return output;
 }
 
-void la(string operands) {
+ex_mem la(int32 rd, int32 op_A) {
+  ex_mem output;
   int32 rdest;
   int32 label;
   sscanf(operands, "%*c%d %d", &rdest, &label);
@@ -416,9 +427,11 @@ void la(string operands) {
   registers[rdest] = memory.data_segment[label].content;
   num_cycles += 5;
   instruction_count++;
+  return output;
 }
 
-void lb(string operands) {
+ex_mem lb(int32 rd, int32 op_A, int32 offset) {
+  ex_mem output;
   int32 rdest;
   int32 offset;
   sscanf(operands, "%*c%d %*c%d", &rdest, &offset);
@@ -426,9 +439,11 @@ void lb(string operands) {
   registers[rdest] = strings[0][registers[offset]];
   num_cycles += 6;
   instruction_count++;
+  return output;
 }
 
-void li(string operands) {
+ex_mem li(int32 rd, int32 op_A) {
+  ex_mem output;
   int32 rdest;
   int32 imm;
   sscanf(operands, "%*c%d %d", &rdest, &imm);
@@ -436,15 +451,18 @@ void li(string operands) {
   registers[rdest] = imm;
   num_cycles += 3;
   instruction_count++;
+  return output;
 }
 
-void subi(string operands) {
+ex_mem subi(int32 rd, int32 op_A, int32 op_B) {
+  ex_mem output;
 	int32 rdest, rsrc1, imm;
 	sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
   //printf("SUBI: Destination: %d, Source: %d, Imm: %d\n", rdest, rsrc1, imm);
 	registers[rdest] = registers[rsrc1] - imm;
-  	num_cycles += 6;
-  	instruction_count++;
+  num_cycles += 6;
+  instruction_count++;
+  return output;
 }
 
 void syscall() {

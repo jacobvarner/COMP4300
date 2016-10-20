@@ -28,17 +28,17 @@ mem_wb mem_wb_old, mem_wb_new;
 
 void load(string operands);
 void sto(string operands);
-ex_mem add(int32 rd, int32 op_A, int32 op_B);
+ex_mem add(int32 rd, int32 op_A, int32 op_B, int32 op_code);
 void multiply(string operands);
-ex_mem addi(int32 rd, int32 op_A, int32 op_B);
-ex_mem b(string operands);
-ex_mem beqz(string operands);
-ex_mem bge(string operands);
-ex_mem bne(string operands);
-ex_mem la(string operands);
-ex_mem lb(string operands);
-ex_mem li(string operands);
-ex_mem subi(string operands);
+ex_mem addi(int32 rd, int32 op_A, int32 op_B, int32 op_code);
+ex_mem b(int32 rd, int32 op_code);
+ex_mem beqz(in32 rd, int32 op_A, int32 op_code);
+ex_mem bge(int32 rd, int32 op_A, int32 op_B, int32 op_code);
+ex_mem bne(int32 rd, int32 op_A, int32 op_B, int32 op_code);
+ex_mem la(int32 rd, int32 op_A, int32 op_code);
+ex_mem lb(int32 rd, int32 op_A, int32 offset, int32 op_code);
+ex_mem li(int32 rd, int32 op_A, int32 op_code);
+ex_mem subi(int32 rd, int32 op_A, int32 op_B, int32 op_code);
 ex_mem syscall();
 void readString();
 void writeString();
@@ -249,7 +249,7 @@ ex_mem instr_exe(id_ex id_ex) {
       sto(currentText.operands);
       break;
     case 2 : //ADD
-      output = add(id_ex.rd, id_ex.op_A, id_ex.op_B);
+      output = add(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
       break;
     case 3 : //MULT
       multiply(currentText.operands);
@@ -258,31 +258,31 @@ ex_mem instr_exe(id_ex id_ex) {
       run = 0;
       break;
     case 5 : //ADDI
-      output = addi(id_ex.rd, id_ex.op_A, id_ex.op_B);
+      output = addi(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
       break;
     case 6 : //B
-      output = b(id_ex.rd);
+      output = b(id_ex.rd, id_ex.op_code);
       break;
     case 7 : //BEQZ
-      output = beqz(id_ex.rd, id_ex.op_A);
+      output = beqz(id_ex.rd, id_ex.op_A, id_ex.op_code);
       break;
     case 8 : //BGE
-      output = bge(id_ex.rd, id_ex.op_A, id_ex.op_B);
+      output = bge(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
       break;
     case 9 : //BNE
-      output = bne(id_ex.rd, id_ex.op_A, id_ex.op_B);
+      output = bne(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
       break;
     case 10 : //LA
-      output = la(id_ex.rd, id_ex.op_A);
+      output = la(id_ex.rd, id_ex.op_A, id_ex.op_code);
       break;
     case 11 : //LB
-      output = lb(id_ex.rd, id_ex.op_A, id_ex.offset);
+      output = lb(id_ex.rd, id_ex.op_A, id_ex.offset, id_ex.op_code);
       break;
     case 12 : //LI
-      output = li(id_ex.rd, id_ex.op_A);
+      output = li(id_ex.rd, id_ex.op_A, id_ex.op_code);
       break;
     case 13 : //SUBI
-      output = subi(id_ex.rd, id_ex.op_A, id_ex.op_B);
+      output = subi(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
       break;
     case 14 : //SYSCALL
       output = syscall();
@@ -332,14 +332,14 @@ void sto(string operands) {
 	memory.data_segment[4].operands, memory.data_segment[4].content);
 }
 
-ex_mem add(int32 rd, int32 op_A, int32 op_B) {
-  ex_mem ouput;
+ex_mem add(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
+  ex_mem output;
 	int sum = 0;
-  int32 address = (int32)strtol(operands, NULL, 0);
-	Data data = loadData(address, memory);
-  sum += data.content;
-  sum += registers[0];
-  registers[0] = sum;
+  output.op_code = op_code;
+  sum = op_A + op_B;
+  output.rd = rd;
+  output.alu_out = sum;
+  output.op_B = sum;
   return output;
 }
 
@@ -357,109 +357,119 @@ void multiply(string operands) {
 	memory.data_segment[4].operands, memory.data_segment[4].content);
 }
 
-ex_mem addi(int32 rd, int32 op_A, int32 op_B) {
+ex_mem addi(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
   ex_mem output;
-  //printf("ADDI: Destination: %d, Source: %d, Imm: %d\n", rdest, rsrc1, imm);
   int32 answer = op_A + op_B;
-  //printf("Answer: %d\n", answer);
-  registers[rd] = answer;
+  output.op_code = op_code;
+  output.rd = rd;
+  output.alu_out = answer;
+  output.op_B = answer;
   num_cycles += 6;
   instruction_count++;
   return output;
 }
 
-ex_mem b(int32 rd) {
+ex_mem b(int32 rd, int32 op_code) {
 	ex_mem output;
-  int32 label;
-	sscanf(operands, "%d", &label);
-  //printf("B: Label: %d\n", label);
-	program_counter += label;
+  output.op_code = op_code;
+	output.rd = rd;
+  output.alu_out = rd;
+  output.op_B = rd;
   num_cycles += 4;
   instruction_count++;
   return output;
 }
 
-ex_mem beqz(int32 rd, int32 op_A) {
+ex_mem beqz(int32 rd, int32 op_A, int32 op_code) {
   ex_mem output;
-	int32 label, rsrc1;
-	sscanf(operands, "%*c%d %d", &rsrc1, &label);
-  //printf("BEQZ: Register[%d]: %d\n", rsrc1, registers[rsrc1]);
-	if(registers[rsrc1] == 0) {
-		program_counter += label;
-	}
+	output.op_code = op_code;
+	if(op_A == 0) {
+		output.rd = rd;
+    output.alu_out = rd;
+    output.op_B = rd;
+	} else {
+    output.rd = 0;
+    output.alu_out = 0;
+    output.op_B = 0;
+  }
   num_cycles += 5;
   instruction_count++;
   return output;
 }
 
-ex_mem bge(int32 rd, int32 op_A, int32 op_B) {
+ex_mem bge(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
   ex_mem output;
-	int32 label, rsrc1, rsrc2;
-	sscanf(operands, "%*c%d %*c%d %d", &rsrc1, &rsrc2, &label);
-  //printf("BGE: Source1: %d = %d, Source2: %d = %d, Label: %d\n", rsrc1, registers[rsrc1], rsrc2, registers[rsrc2], label);
-	if(registers[rsrc1] >= registers[rsrc2]) {
-		program_counter += label;
-	}
+  output.op_code = op_code;
+	if(op_A >= op_B) {
+		output.rd = rd;
+    output.alu_out = rd;
+    output.op_B = rd;
+	} else {
+    output.rd = 0;
+    output.alu_out = 0;
+    output.op_B = 0;
+  }
   num_cycles += 5;
   instruction_count++;
   return output;
 }
 
-ex_mem bne(int32 rd, int32 op_A, int32 op_B) {
+ex_mem bne(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
   ex_mem output;
-	int32 label, rsrc1, rsrc2;
-	sscanf(operands, "%*c%d %*c%d %d", &rsrc1, &rsrc2, &label);
-  //printf("BNE: Source1: %d, Source2: %d, Label: %d\n", rsrc1, rsrc2, label);
-	if(registers[rsrc1] != registers[rsrc2]) {
-		program_counter += label;
-	}
+  output.op_code = op_code;
+	if(op_A != op_B) {
+		output.rd = rd;
+    output.alu_out = rd;
+    output.op_B = rd;
+	} else {
+    output.rd = 0;
+    output.alu_out = 0;
+    output.op_B = 0;
+  }
   num_cycles += 5;
   instruction_count++;
   return output;
 }
 
-ex_mem la(int32 rd, int32 op_A) {
+ex_mem la(int32 rd, int32 op_A, int32 op_code) {
   ex_mem output;
-  int32 rdest;
-  int32 label;
-  sscanf(operands, "%*c%d %d", &rdest, &label);
-  //printf("LA: Destination: %d, Label: %d\n", rdest, label);
-  registers[rdest] = memory.data_segment[label].content;
+  output.op_code = op_code;
+  output.rd = rd;
+  output.alu_out = op_A;
+  output.op_B = op_A;
   num_cycles += 5;
   instruction_count++;
   return output;
 }
 
-ex_mem lb(int32 rd, int32 op_A, int32 offset) {
+ex_mem lb(int32 rd, int32 op_A, int32 offset, int32 op_code) {
   ex_mem output;
-  int32 rdest;
-  int32 offset;
-  sscanf(operands, "%*c%d %*c%d", &rdest, &offset);
-  //printf("LB: Destination: %d, Offset: %d\n", rdest, offset);
-  registers[rdest] = strings[0][registers[offset]];
+  output.op_code = op_code;
+  output.rd = rd;
+  output.op_B = op_A;
+  output.alu_out = op_A;
   num_cycles += 6;
   instruction_count++;
   return output;
 }
 
-ex_mem li(int32 rd, int32 op_A) {
+ex_mem li(int32 rd, int32 op_A, int32 op_code) {
   ex_mem output;
-  int32 rdest;
-  int32 imm;
-  sscanf(operands, "%*c%d %d", &rdest, &imm);
-  //printf("LI: Destination: %d, Imm: %d\n", rdest, imm);
-  registers[rdest] = imm;
+  output.op_code = op_code;
+  output.rd = rd;
+  output.op_B = op_A;
+  output.alu_out = op_A;
   num_cycles += 3;
   instruction_count++;
   return output;
 }
 
-ex_mem subi(int32 rd, int32 op_A, int32 op_B) {
+ex_mem subi(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
   ex_mem output;
-	int32 rdest, rsrc1, imm;
-	sscanf(operands, "%*c%d %*c%d %d", &rdest, &rsrc1, &imm);
-  //printf("SUBI: Destination: %d, Source: %d, Imm: %d\n", rdest, rsrc1, imm);
-	registers[rdest] = registers[rsrc1] - imm;
+	output.op_code = op_code;
+  output.rd = rd;
+  output.op_B = op_A - op_B;
+  output.alu_out = op_A - op_B;
   num_cycles += 6;
   instruction_count++;
   return output;

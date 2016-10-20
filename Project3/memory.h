@@ -39,7 +39,7 @@ typedef struct id_ex {
 	int32 rs, rt, rd;
 	int32 op_A, op_B;
 	int32 offset;
-	int32 new_pc
+	int32 new_pc;
 }
 
 typedef struct ex_mem {

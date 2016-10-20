@@ -43,9 +43,9 @@ ex_mem syscall();
 void readString();
 void writeString();
 
-int32 instr_fetch(int32 currentInstructionCode, int pc);
+if_id instr_fetch(int32 currentInstructionCode, int pc);
 id_ex instr_decode(int32 ir, int pc);
-ex_mem instr_exe(id_ex id_ex_old);
+ex_mem instr_exe(id_ex id_ex_old, ex_mem ex_mem_old);
 mem_wb mem_access(ex_mem ex_mem_old);
 void write_back(mem_wb mem_wb_old, int gpr);
 
@@ -75,21 +75,19 @@ int main(int argc, char *argv[]) {
 		//printf("%s \n", currentText.instruction);
 		currentInstructionCode = currentText.instruction_code;
 
-    if_id_old.ir = if_id_new.ir;
-    if_id_new.ir = instr_fetch(currentInstructionCode, &program_counter);
+    if_id_old = if_id_new;
+    if_id_new = instr_fetch(currentInstructionCode, &program_counter);
 
     id_ex_old = id_ex_new;
     id_ex_new = instr_decode(if_id_old.ir, &program_counter);
 
     ex_mem_old = ex_mem_new;
-    ex_mem_new = instr_exe(id_ex_old);
+    ex_mem_new = instr_exe(id_ex_old, ex_mem_old);
 
     mem_wb_old = mem_wb_new;
     mem_wb_new = mem_access(ex_mem_old);
 
     write_back(mem_wb_old, &registers);
-
-		program_counter++;
 	}
 
   double speedup = (8 * (double)instruction_count) / (double)num_cycles;
@@ -104,18 +102,16 @@ Register[31]: %d\n\nC = %d\nIC = %d\n[8*IC]/C = %f\n\n", registers[0],
 	return 0;
 }
 
-int32 instr_fetch(int currentInstructionCode, int pc) {
-
-  // Need to check for hazards
-
-  return currentInstructionCode;
+if_id instr_fetch(int currentInstructionCode, int pc) {
+  if_id output;
+  output.ir = currentInstructionCode;
+  pc++;
+  return output;
 }
 
 id_ex instr_decode(int32 ir, int pc) {
-
-  // Need to check for hazards
-
-  id_ex id_ex_output;
+  id_ex output;
+  output.op_code = ir
 
   switch (ir) {
     case 0 : //LOAD
@@ -129,12 +125,12 @@ id_ex instr_decode(int32 ir, int pc) {
       int32 rs;
       int32 rt;
       sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &rt);
-      id_ex_output.rd = rd;
-      id_ex_output.rs = rs;
-      id_ex_output.rt = rt;
-      id_ex_output.op_A = registers[rs];
-      id_ex_output.op_B = registers[rt];
-      id_ex_output.op_code = ir;
+      output.rd = rd;
+      output.rs = rs;
+      output.rt = rt;
+      output.op_A = registers[rs];
+      output.op_B = registers[rt];
+      output.op_code = ir;
       break;
     case 3 : //MULT
       multiply(currentText.operands);
@@ -147,145 +143,93 @@ id_ex instr_decode(int32 ir, int pc) {
       int32 rs;
       int32 imm;
       sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
-      id_ex_output.rd = rd;
-      id_ex_output.rs = rs;
-      id_ex_output.op_A = registers[rs];
-      id_ex_output.op_B = imm;
-      id_ex_output.op_code = ir;
+      output.rd = rd;
+      output.rs = rs;
+      output.op_A = registers[rs];
+      output.op_B = imm;
+      output.op_code = ir;
       break;
     case 6 : //B
       int32 label;
       sscanf(operands, "%d", &label);
-      id_ex_output.rd = label;
-      id_ex_output.op_code = ir;
+      pc += label;
+      output.op_code = 15;
       break;
     case 7 : //BEQZ
       int32 label, rs;
       sscanf(operands, "%*c%d %d", &rs, &label);
-      id_ex_output.rs = rs;
-      id_ex_output.rd = label;
-      id_ex_output.op_A = registers[rs];
-      id_ex_output.op_code = ir;
+      output.rs = rs;
+      output.op_A = registers[rs];
+      if (output.op_A == 0) {
+        pc += label;
+      }
+      output.op_code = 15;
       break;
     case 8 : //BGE
       int32 label, rs, rt;
       sscanf(operands, "%*c%d %*c%d %d", &rs, &rt, &label);
-      id_ex_output.rs = rs;
-      id_ex_output.rt = rt;
-      id_ex_output.rd = label;
-      id_ex_output.op_A = registers[rs];
-      id_ex_output.op_B = registers[rt];
-      id_ex_output.op_code = ir;
+      output.rs = rs;
+      output.rt = rt;
+      output.op_A = registers[rs];
+      output.op_B = registers[rt];
+      if (output.op_A >= output.op_B) {
+        pc += label;
+      }
+      output.op_code = 15;
       break;
     case 9 : //BNE
       int32 label, rs, rt;
       sscanf(operands, "%*c%d %*c%d %d", &rs, &rt, &label);
-      id_ex_output.rs = rs;
-      id_ex_output.rt = rt;
-      id_ex_output.rd = label;
-      id_ex_output.op_A = registers[rs];
-      id_ex_output.op_B = registers[rt];
-      id_ex_output.op_code = ir;
+      output.rs = rs;
+      output.rt = rt;
+      output.op_A = registers[rs];
+      output.op_B = registers[rt];
+      if (output.op_A != output.op_B) {
+        pc += label;
+      }
+      output.op_code = 15;
       break;
     case 10 : //LA
       int32 rd;
       int32 label;
       sscanf(operands, "%*c%d %d", &rd, &label);
-      id_ex_output.rd = rd;
-      id_ex_output.rs = label;
-      id_ex_output.op_A = memory.data_segment[label].content;
-      id_ex_output.op_code = ir;
+      output.rd = rd;
+      output.rs = label;
+      output.op_A = memory.data_segment[label].content;
+      output.op_code = ir;
       break;
     case 11 : //LB
       int32 rd;
       int32 offset;
       sscanf(operands, "%*c%d %*c%d", &rd, &offset);
-      id_ex_output.rd = rd;
-      id_ex_output.offset = offset;
-      id_ex_output.op_code = ir;
+      output.rd = rd;
+      output.offset = offset;
+      output.op_code = ir;
       break;
     case 12 : //LI
       int32 rd;
       int32 imm;
       sscanf(operands, "%*c%d %d", &rd, &imm);
-      id_ex_output.rd = rd;
-      id_ex_output.op_A = imm;
-      id_ex_output.op_code = ir;
+      output.rd = rd;
+      output.op_A = imm;
+      output.op_code = ir;
       break;
     case 13 : //SUBI
       int32 rd, rs, imm;
       sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
-      id_ex_output.rd = rd;
-      id_ex_output.rs = rs;
-      id_ex_output.op_A = registers[rs];
-      id_ex_output.op_B = imm;
-      id_ex_output.op_code = ir;
+      output.rd = rd;
+      output.rs = rs;
+      output.op_A = registers[rs];
+      output.op_B = imm;
+      output.op_code = ir;
       break;
     case 14 : //SYSCALL
-      id_ex_output.rd = 29;
-      id_ex_output.rs = 30;
-      id_ex_output.rt = 31;
-      id_ex_output.op_A = registers[rs];
-      id_ex_output.op_B = registers[rt];
-      id_ex_output.op_code = ir;
-      break;
-    case 15 : //NOP
-      // TODO
-      break;
-    default :
-
-  }
-
-  return id_ex_output;
-}
-
-ex_mem instr_exe(id_ex id_ex) {
-  ex_mem output;
-  switch (id_ex.op_code) {
-    case 0 : //LOAD
-      load(currentText.operands);
-      break;
-    case 1 : //STO
-      sto(currentText.operands);
-      break;
-    case 2 : //ADD
-      output = add(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
-      break;
-    case 3 : //MULT
-      multiply(currentText.operands);
-      break;
-    case 4 : //END
-      run = 0;
-      break;
-    case 5 : //ADDI
-      output = addi(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
-      break;
-    case 6 : //B
-      output = b(id_ex.rd, id_ex.op_code);
-      break;
-    case 7 : //BEQZ
-      output = beqz(id_ex.rd, id_ex.op_A, id_ex.op_code);
-      break;
-    case 8 : //BGE
-      output = bge(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
-      break;
-    case 9 : //BNE
-      output = bne(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
-      break;
-    case 10 : //LA
-      output = la(id_ex.rd, id_ex.op_A, id_ex.op_code);
-      break;
-    case 11 : //LB
-      output = lb(id_ex.rd, id_ex.op_A, id_ex.offset, id_ex.op_code);
-      break;
-    case 12 : //LI
-      output = li(id_ex.rd, id_ex.op_A, id_ex.op_code);
-      break;
-    case 13 : //SUBI
-      output = subi(id_ex.rd, id_ex.op_A, id_ex.op_B, id_ex.op_code);
-      break;
-    case 14 : //SYSCALL
-      output = syscall();
+      output.rd = 29;
+      output.rs = 30;
+      output.rt = 31;
+      output.op_A = registers[rs];
+      output.op_B = registers[rt];
+      output.op_code = ir;
       break;
     case 15 : //NOP
       // TODO
@@ -297,12 +241,101 @@ ex_mem instr_exe(id_ex id_ex) {
   return output;
 }
 
+ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem) {
+  ex_mem output;
+
+  if (id_ex.rs == ex_mem.rd || id_ex.rt == ex_mem.rd) {
+    // Handle forwarding
+  }
+
+  switch (id_ex.op_code) {
+    case 0 : //LOAD
+      load(currentText.operands);
+      break;
+    case 1 : //STO
+      sto(currentText.operands);
+      break;
+    case 2 : //ADD
+      output.alu_out = id_ex.op_A + id_ex.op_B;
+      break;
+    case 3 : //MULT
+      multiply(currentText.operands);
+      break;
+    case 4 : //END
+      run = 0;
+      break;
+    case 5 : //ADDI
+      output.alu_out = id_ex.op_A + id_ex.op_B;
+      break;
+    case 6 : //B
+      // already done
+      break;
+    case 7 : //BEQZ
+      // already done
+      break;
+    case 8 : //BGE
+      // already done
+      break;
+    case 9 : //BNE
+      // already done
+      break;
+    case 10 : //LA
+      output.alu_out = id_ex.op_A;
+      break;
+    case 11 : //LB
+      output.alu_out = id_ex.op_A;
+      break;
+    case 12 : //LI
+      output.alu_out = id_ex.op_A;
+      break;
+    case 13 : //SUBI
+      output.alu_out = id_ex.op_A - id_ex.op_B;
+      break;
+    case 14 : //SYSCALL
+      output = syscall();
+      break;
+    case 15 : //NOP
+      // TODO
+      break;
+    default :
+
+  }
+
+  output.op_code = id_ex.op_code;
+  output.op_B = id_ex.op_B;
+  output.rd = id_ex.rd;
+
+  return output;
+}
+
 mem_wb mem_access(ex_mem ex_mem_old){
-  // TODO
+  mem_wb output;
+  if (ex_mem_old.op_code == 11) {
+    output.mdr = memory[ex_mem_old.alu_out];
+  } else if (ex_mem_old.op_code == 12) {
+    output.mdr = memory[ex_mem_old.alu_out];
+  } else if (ex_mem_old.op_code == 13) {
+    output.mdr = ex_mem_old.alu_out;
+  }
+
+  output.op_code = ex_mem_old.op_code;
+  output.op_B = ex_mem_old.op_B;
+  output.alu_out = ex_mem_old.alu_out;
+  output.rd = ex_mem_old.rd;
+
+  return output;
 }
 
 void write_back(mem_wb mem_wb_old, int gpr) {
-  // TODO
+  if (ex_mem_old.op_code == 11) {
+    registers[mem_wb_old.op_B] = mem_wb.mdr;
+  } else if (ex_mem_old.op_code == 12) {
+    registers[mem_wb_old.op_B] = mem_wb.mdr;
+  } else if (ex_mem_old.op_code == 13) {
+    registers[mem_wb_old.op_B] = mem_wb.mdr;
+  } else {
+    registers[mem_wb_old.rd] = mem_wb.alu_out;
+  }
 }
 
 void load(string operands) {
@@ -332,14 +365,11 @@ void sto(string operands) {
 	memory.data_segment[4].operands, memory.data_segment[4].content);
 }
 
-ex_mem add(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
+ex_mem add(int32 op_A, int32 op_B) {
   ex_mem output;
 	int sum = 0;
-  output.op_code = op_code;
   sum = op_A + op_B;
-  output.rd = rd;
   output.alu_out = sum;
-  output.op_B = sum;
   return output;
 }
 

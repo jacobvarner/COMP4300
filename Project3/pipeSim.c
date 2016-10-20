@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     id_ex_new = instr_decode(if_id_old.ir, &program_counter);
 
     ex_mem_old = ex_mem_new;
-    ex_mem_new = instr_exe(id_ex_old, ex_mem_old);
+    ex_mem_new = instr_exe(id_ex_old, ex_mem_old, mem_wb_new);
 
     mem_wb_old = mem_wb_new;
     mem_wb_new = mem_access(ex_mem_old);
@@ -83,9 +83,9 @@ int main(int argc, char *argv[]) {
   // Output summary
 	printf("\nRESULTS:\n\nRegister[0]: %d\nRegister[1]: %d\nRegister[2]: %d\n\
 Register[3]: %d\nRegister[29]: %d\nRegister[30]: %d\n\
-Register[31]: %d\n\nC = %d\nIC = %d\n[8*IC]/C = %f\n\n", registers[0],
+Register[31]: %d\n\nC = %d\nIC = %d\n[8*IC]/C = %f\n\nNOPS: %d\n\n", registers[0],
   registers[1], registers[2], registers[3], registers[29], registers[30],
-  registers[31], num_cycles, instruction_count, speedup);
+  registers[31], num_cycles, instruction_count, speedup, num_nops);
 
 	return 0;
 }
@@ -249,11 +249,24 @@ id_ex instr_decode(int32 ir, int pc) {
   return output;
 }
 
-ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem) {
+ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem, mem_wb mem_wb) {
   ex_mem output;
 
-  if (id_ex.rs == ex_mem.rd || id_ex.rt == ex_mem.rd) {
-    // Handle forwarding
+  // Forwarding
+  if (id_ex.rs == ex_mem.rd) {
+    id_ex.op_A = ex_mem.alu_out;
+  }
+
+  if (id_ex.rt == ex_mem.rd) {
+    id_ex.op_B = ex_mem.alu_out;
+  }
+
+  // Mem hazards
+  if (mem_wb.rd == id_ex.rs) {
+    id_ex.op_A = mem_wb.alu_out;
+  }
+  if (mem_wb.rd == id_ex.rt) {
+    id_ex.op_B = mem_wb.alu_out;
   }
 
   switch (id_ex.op_code) {

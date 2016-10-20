@@ -293,7 +293,6 @@ ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem_var, mem_wb mem_wb) {
       syscall();
       break;
     case 15 : //NOP
-      // TODO
       break;
   }
 

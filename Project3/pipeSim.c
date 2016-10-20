@@ -26,19 +26,6 @@ mem_wb mem_wb_old, mem_wb_new;
 // $30 - syscall parameters
 // $31 - syscall parameters
 
-void load(string operands);
-void sto(string operands);
-ex_mem add(int32 rd, int32 op_A, int32 op_B, int32 op_code);
-void multiply(string operands);
-ex_mem addi(int32 rd, int32 op_A, int32 op_B, int32 op_code);
-ex_mem b(int32 rd, int32 op_code);
-ex_mem beqz(in32 rd, int32 op_A, int32 op_code);
-ex_mem bge(int32 rd, int32 op_A, int32 op_B, int32 op_code);
-ex_mem bne(int32 rd, int32 op_A, int32 op_B, int32 op_code);
-ex_mem la(int32 rd, int32 op_A, int32 op_code);
-ex_mem lb(int32 rd, int32 op_A, int32 offset, int32 op_code);
-ex_mem li(int32 rd, int32 op_A, int32 op_code);
-ex_mem subi(int32 rd, int32 op_A, int32 op_B, int32 op_code);
 ex_mem syscall();
 void readString();
 void writeString();
@@ -66,6 +53,7 @@ int main(int argc, char *argv[]) {
 	program_counter = 0;
   num_cycles = 0;
   instruction_count = 0;
+  num_nops = 0;
 	run = 1;
 	Text currentText;
 	int currentInstructionCode;
@@ -148,12 +136,16 @@ id_ex instr_decode(int32 ir, int pc) {
       output.op_A = registers[rs];
       output.op_B = imm;
       output.op_code = ir;
+      num_cycles += 6;
+      instruction_count++;
       break;
     case 6 : //B
       int32 label;
       sscanf(operands, "%d", &label);
       pc += label;
       output.op_code = 15;
+      num_cycles += 4;
+      instruction_count++;
       break;
     case 7 : //BEQZ
       int32 label, rs;
@@ -164,6 +156,8 @@ id_ex instr_decode(int32 ir, int pc) {
         pc += label;
       }
       output.op_code = 15;
+      num_cycles += 5;
+      instruction_count++;
       break;
     case 8 : //BGE
       int32 label, rs, rt;
@@ -176,6 +170,8 @@ id_ex instr_decode(int32 ir, int pc) {
         pc += label;
       }
       output.op_code = 15;
+      num_cycles += 5;
+      instruction_count++;
       break;
     case 9 : //BNE
       int32 label, rs, rt;
@@ -188,6 +184,8 @@ id_ex instr_decode(int32 ir, int pc) {
         pc += label;
       }
       output.op_code = 15;
+      num_cycles += 5;
+      instruction_count++;
       break;
     case 10 : //LA
       int32 rd;
@@ -197,6 +195,8 @@ id_ex instr_decode(int32 ir, int pc) {
       output.rs = label;
       output.op_A = memory.data_segment[label].content;
       output.op_code = ir;
+      num_cycles += 5;
+      instruction_count++;
       break;
     case 11 : //LB
       int32 rd;
@@ -205,6 +205,8 @@ id_ex instr_decode(int32 ir, int pc) {
       output.rd = rd;
       output.offset = offset;
       output.op_code = ir;
+      num_cycles += 6;
+      instruction_count++;
       break;
     case 12 : //LI
       int32 rd;
@@ -213,6 +215,8 @@ id_ex instr_decode(int32 ir, int pc) {
       output.rd = rd;
       output.op_A = imm;
       output.op_code = ir;
+      num_cycles += 3;
+      instruction_count++;
       break;
     case 13 : //SUBI
       int32 rd, rs, imm;
@@ -222,6 +226,8 @@ id_ex instr_decode(int32 ir, int pc) {
       output.op_A = registers[rs];
       output.op_B = imm;
       output.op_code = ir;
+      num_cycles += 6;
+      instruction_count++;
       break;
     case 14 : //SYSCALL
       output.rd = 29;
@@ -230,9 +236,11 @@ id_ex instr_decode(int32 ir, int pc) {
       output.op_A = registers[rs];
       output.op_B = registers[rt];
       output.op_code = ir;
+      num_cycles += 8;
+      instruction_count++;
       break;
     case 15 : //NOP
-      // TODO
+      num_nops++;
       break;
     default :
 
@@ -336,173 +344,6 @@ void write_back(mem_wb mem_wb_old, int gpr) {
   } else {
     registers[mem_wb_old.rd] = mem_wb.alu_out;
   }
-}
-
-void load(string operands) {
-	//fetch value from data section using operands
-	int32 address = (int32)strtol(operands, NULL, 0);
-	Data data = loadData(address, memory);
-	//store that value at the top of stack
-	registers[0] = data.content;
-  printf("\nStatus:\n\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
-	memory.data_segment[0].operands, memory.data_segment[0].content,
-	memory.data_segment[1].operands, memory.data_segment[1].content,
-	memory.data_segment[2].operands, memory.data_segment[2].content,
-	memory.data_segment[3].operands, memory.data_segment[3].content,
-	memory.data_segment[4].operands, memory.data_segment[4].content);
-}
-
-void sto(string operands) {
-	//fetch value from data section using operands
-	int32 address = (int32)strtol(operands, NULL, 0);
-	//store that value at the top of stack
-	memory.data_segment[address].content = registers[0];
-  printf("\nStatus:\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
-	memory.data_segment[0].operands, memory.data_segment[0].content,
-	memory.data_segment[1].operands, memory.data_segment[1].content,
-	memory.data_segment[2].operands, memory.data_segment[2].content,
-	memory.data_segment[3].operands, memory.data_segment[3].content,
-	memory.data_segment[4].operands, memory.data_segment[4].content);
-}
-
-ex_mem add(int32 op_A, int32 op_B) {
-  ex_mem output;
-	int sum = 0;
-  sum = op_A + op_B;
-  output.alu_out = sum;
-  return output;
-}
-
-void multiply(string operands) {
-	int product = 0;
-  int32 address = (int32)strtol(operands, NULL, 0);
-	Data data = loadData(address, memory);
-  product = data.content * registers[0];
-  registers[0] = product;
-  printf("\nStatus:\nRegister[0]: %d\n\n.data\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n  %s %d\n\n", registers[0],
-	memory.data_segment[0].operands, memory.data_segment[0].content,
-	memory.data_segment[1].operands, memory.data_segment[1].content,
-	memory.data_segment[2].operands, memory.data_segment[2].content,
-	memory.data_segment[3].operands, memory.data_segment[3].content,
-	memory.data_segment[4].operands, memory.data_segment[4].content);
-}
-
-ex_mem addi(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
-  ex_mem output;
-  int32 answer = op_A + op_B;
-  output.op_code = op_code;
-  output.rd = rd;
-  output.alu_out = answer;
-  output.op_B = answer;
-  num_cycles += 6;
-  instruction_count++;
-  return output;
-}
-
-ex_mem b(int32 rd, int32 op_code) {
-	ex_mem output;
-  output.op_code = op_code;
-	output.rd = rd;
-  output.alu_out = rd;
-  output.op_B = rd;
-  num_cycles += 4;
-  instruction_count++;
-  return output;
-}
-
-ex_mem beqz(int32 rd, int32 op_A, int32 op_code) {
-  ex_mem output;
-	output.op_code = op_code;
-	if(op_A == 0) {
-		output.rd = rd;
-    output.alu_out = rd;
-    output.op_B = rd;
-	} else {
-    output.rd = 0;
-    output.alu_out = 0;
-    output.op_B = 0;
-  }
-  num_cycles += 5;
-  instruction_count++;
-  return output;
-}
-
-ex_mem bge(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
-  ex_mem output;
-  output.op_code = op_code;
-	if(op_A >= op_B) {
-		output.rd = rd;
-    output.alu_out = rd;
-    output.op_B = rd;
-	} else {
-    output.rd = 0;
-    output.alu_out = 0;
-    output.op_B = 0;
-  }
-  num_cycles += 5;
-  instruction_count++;
-  return output;
-}
-
-ex_mem bne(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
-  ex_mem output;
-  output.op_code = op_code;
-	if(op_A != op_B) {
-		output.rd = rd;
-    output.alu_out = rd;
-    output.op_B = rd;
-	} else {
-    output.rd = 0;
-    output.alu_out = 0;
-    output.op_B = 0;
-  }
-  num_cycles += 5;
-  instruction_count++;
-  return output;
-}
-
-ex_mem la(int32 rd, int32 op_A, int32 op_code) {
-  ex_mem output;
-  output.op_code = op_code;
-  output.rd = rd;
-  output.alu_out = op_A;
-  output.op_B = op_A;
-  num_cycles += 5;
-  instruction_count++;
-  return output;
-}
-
-ex_mem lb(int32 rd, int32 op_A, int32 offset, int32 op_code) {
-  ex_mem output;
-  output.op_code = op_code;
-  output.rd = rd;
-  output.op_B = op_A;
-  output.alu_out = op_A;
-  num_cycles += 6;
-  instruction_count++;
-  return output;
-}
-
-ex_mem li(int32 rd, int32 op_A, int32 op_code) {
-  ex_mem output;
-  output.op_code = op_code;
-  output.rd = rd;
-  output.op_B = op_A;
-  output.alu_out = op_A;
-  num_cycles += 3;
-  instruction_count++;
-  return output;
-}
-
-ex_mem subi(int32 rd, int32 op_A, int32 op_B, int32 op_code) {
-  ex_mem output;
-	output.op_code = op_code;
-  output.rd = rd;
-  output.op_B = op_A - op_B;
-  output.alu_out = op_A - op_B;
-  num_cycles += 6;
-  instruction_count++;
-  return output;
 }
 
 void syscall() {

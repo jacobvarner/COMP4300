@@ -32,7 +32,7 @@ typedef struct Memory {
 
 typedef struct if_id {
 	int32 ir;
-}
+} if_id;
 
 typedef struct id_ex {
 	int32 op_code;
@@ -40,14 +40,14 @@ typedef struct id_ex {
 	int32 op_A, op_B;
 	int32 offset;
 	int32 new_pc;
-}
+} id_ex;
 
 typedef struct ex_mem {
 	int32 op_code;
 	int32 alu_out;
 	int32 op_B;
 	int32 rd;
-}
+} ex_mem;
 
 typedef struct mem_wb {
 	int32 op_code;
@@ -55,7 +55,7 @@ typedef struct mem_wb {
 	int32 op_B;
 	int32 alu_out;
 	int32 rd;
-}
+} mem_wb;
 
 
 #endif // MEMORY_H_

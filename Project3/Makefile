@@ -1,2 +1,2 @@
 all:
-		gcc read.c loader.c gprSim.c -o gprSim
+		gcc read.c loader.c pipeSim.c -o pipeSim

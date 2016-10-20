@@ -70,11 +70,11 @@ int assignInstructionCode(string instruction) {
 		output = 0;
 	} else if (strcmp(instruction, "POP") == 0 || strcmp(instruction, "STO") == 0) {
 		output = 1;
-	} else if (strcmp(instruction, "ADD") == 0) {
+	} else if (strcmp(instruction, "add") == 0) {
 		output = 2;
 	} else if (strcmp(instruction, "MULT") == 0) {
 		output = 3;
-	} else if (strcmp(instruction, "END") == 0) {
+	} else if (strcmp(instruction, "end") == 0) {
 		output = 4;
 	} else if (strcmp(instruction, "addi") == 0) {
 		output = 5;

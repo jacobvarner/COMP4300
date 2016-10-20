@@ -31,8 +31,8 @@ void syscall();
 void readString();
 void writeString();
 
-if_id instr_fetch(int32 currentInstructionCode, int *pc);
-id_ex instr_decode(int32 ir, string operands, int *pc);
+if_id instr_fetch(int32 currentInstructionCode, string operands, int *pc);
+id_ex instr_decode(if_id if_id_old, int *pc);
 ex_mem instr_exe(id_ex id_ex_old, ex_mem ex_mem_old, mem_wb mem_wb_new);
 mem_wb mem_access(ex_mem ex_mem_old);
 void write_back(mem_wb mem_wb_old);
@@ -65,10 +65,10 @@ int main(int argc, char *argv[]) {
 		currentInstructionCode = currentText.instruction_code;
 
     if_id_old = if_id_new;
-    if_id_new = instr_fetch(currentInstructionCode, &program_counter);
+    if_id_new = instr_fetch(currentInstructionCode, currentText.operands, &program_counter);
 
     id_ex_old = id_ex_new;
-    id_ex_new = instr_decode(if_id_old.ir, currentText.operands, &program_counter);
+    id_ex_new = instr_decode(if_id_old, &program_counter);
 
     ex_mem_old = ex_mem_new;
     ex_mem_new = instr_exe(id_ex_old, ex_mem_old, mem_wb_new);
@@ -77,6 +77,8 @@ int main(int argc, char *argv[]) {
     mem_wb_new = mem_access(ex_mem_old);
 
     write_back(mem_wb_old);
+
+    program_counter++;
 	}
 
   double speedup = (8 * (double)instruction_count) / (double)num_cycles;
@@ -91,19 +93,20 @@ Register[31]: %d\n\nC = %d\nIC = %d\n[8*IC]/C = %f\n\nNOPS: %d\n\n", registers[0
 	return 0;
 }
 
-if_id instr_fetch(int currentInstructionCode, int *pc) {
+if_id instr_fetch(int currentInstructionCode, string operands, int *pc) {
   if_id output;
   output.ir = currentInstructionCode;
+  strcpy(output.operands, operands);
   pc++;
   return output;
 }
 
-id_ex instr_decode(int32 ir, string operands, int *pc) {
+id_ex instr_decode(if_id if_id, int *pc) {
   id_ex output;
   int32 rd, rs, rt, offset, label, imm;
-  output.op_code = ir;
+  output.op_code = if_id.ir;
 
-  switch (ir) {
+  switch (if_id.ir) {
     case 0 : //LOAD
       // left over
       break;
@@ -111,39 +114,42 @@ id_ex instr_decode(int32 ir, string operands, int *pc) {
       // left over
       break;
     case 2 : //ADD
-      sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &rt);
+      printf("ADD decodec \n");
+      sscanf(if_id.operands, "%*c%d %*c%d %d", &rd, &rs, &rt);
+      printf("ADD: rd: %d, rs: %d, rt: %d\n", rd, rs, rt);
       output.rd = rd;
       output.rs = rs;
       output.rt = rt;
       output.op_A = registers[rs];
       output.op_B = registers[rt];
-      output.op_code = ir;
       break;
     case 3 : //MULT
       // left over
       break;
     case 4 : //END
-      // left over
+      run = 0;
       break;
     case 5 : //ADDI
-      sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
+      printf("ADDI decoded \n");
+      sscanf(if_id.operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
       output.rd = rd;
       output.rs = rs;
       output.op_A = registers[rs];
       output.op_B = imm;
-      output.op_code = ir;
       num_cycles += 6;
       instruction_count++;
       break;
     case 6 : //B
-      sscanf(operands, "%d", &label);
+      printf("B decoded \n");
+      sscanf(if_id.operands, "%d", &label);
       pc += label;
       output.op_code = 15;
       num_cycles += 4;
       instruction_count++;
       break;
     case 7 : //BEQZ
-      sscanf(operands, "%*c%d %d", &rs, &label);
+      printf("BEQZ decoded \n");
+      sscanf(if_id.operands, "%*c%d %d", &rs, &label);
       output.rs = rs;
       output.op_A = registers[rs];
       if (output.op_A == 0) {
@@ -154,7 +160,8 @@ id_ex instr_decode(int32 ir, string operands, int *pc) {
       instruction_count++;
       break;
     case 8 : //BGE
-      sscanf(operands, "%*c%d %*c%d %d", &rs, &rt, &label);
+      printf("BGE decoded \n");
+      sscanf(if_id.operands, "%*c%d %*c%d %d", &rs, &rt, &label);
       output.rs = rs;
       output.rt = rt;
       output.op_A = registers[rs];
@@ -167,7 +174,8 @@ id_ex instr_decode(int32 ir, string operands, int *pc) {
       instruction_count++;
       break;
     case 9 : //BNE
-      sscanf(operands, "%*c%d %*c%d %d", &rs, &rt, &label);
+      printf("BNE decoded \n");
+      sscanf(if_id.operands, "%*c%d %*c%d %d", &rs, &rt, &label);
       output.rs = rs;
       output.rt = rt;
       output.op_A = registers[rs];
@@ -180,45 +188,49 @@ id_ex instr_decode(int32 ir, string operands, int *pc) {
       instruction_count++;
       break;
     case 10 : //LA
-      sscanf(operands, "%*c%d %d", &rd, &label);
+      printf("LA decoded \n");
+      sscanf(if_id.operands, "%*c%d %d", &rd, &label);
       output.rd = rd;
       output.rs = label;
       output.op_A = memory.data_segment[label].content;
-      output.op_code = ir;
       num_cycles += 5;
       instruction_count++;
       break;
     case 11 : //LB
-      sscanf(operands, "%*c%d %*c%d", &rd, &offset);
+      printf("LB decoded \n");
+      sscanf(if_id.operands, "%*c%d %*c%d", &rd, &offset);
       output.rd = rd;
       output.offset = offset;
-      output.op_code = ir;
       num_cycles += 6;
       instruction_count++;
       break;
     case 12 : //LI
-      sscanf(operands, "%*c%d %d", &rd, &imm);
+      printf("LI decoded \n");
+      sscanf(if_id.operands, "%*c%d %d", &rd, &imm);
+      printf("LI: Destination: %d, Imm: %d\n", rd, imm);
       output.rd = rd;
       output.op_A = imm;
-      output.op_code = ir;
       num_cycles += 3;
       instruction_count++;
       break;
     case 13 : //SUBI
-      sscanf(operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
+      printf("SUBI decoded \n");
+      sscanf(if_id.operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
+      printf("SUBI: Destination: %d, Source: %d, Imm: %d\n", rd, rs, imm);
       output.rd = rd;
       output.rs = rs;
       output.op_A = registers[rs];
       output.op_B = imm;
-      output.op_code = ir;
       num_cycles += 6;
       instruction_count++;
       break;
     case 14 : //SYSCALL
+      printf("SYSCALL decoded \n");
       num_cycles += 8;
       instruction_count++;
       break;
     case 15 : //NOP
+      printf("NOP decoded \n");
       num_nops++;
       break;
   }
@@ -263,36 +275,47 @@ ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem_var, mem_wb mem_wb) {
       // left over
       break;
     case 5 : //ADDI
+      printf("ADDI executed \n");
       output.alu_out = id_ex.op_A + id_ex.op_B;
       break;
     case 6 : //B
+      printf("B executed \n");
       // already done
       break;
     case 7 : //BEQZ
+      printf("BEQZ executed \n");
       // already done
       break;
     case 8 : //BGE
+      printf("BGE executed \n");
       // already done
       break;
     case 9 : //BNE
+      printf("BNE executed \n");
       // already done
       break;
     case 10 : //LA
+      printf("LA executed \n");
       output.alu_out = id_ex.op_A;
       break;
     case 11 : //LB
+      printf("LB executed \n");
       output.alu_out = id_ex.op_A;
       break;
     case 12 : //LI
+      printf("LI executed \n");
       output.alu_out = id_ex.op_A;
       break;
     case 13 : //SUBI
+      printf("SUBI executed \n");
       output.alu_out = id_ex.op_A - id_ex.op_B;
       break;
     case 14 : //SYSCALL
+      printf("SYSCALL executed \n");
       syscall();
       break;
     case 15 : //NOP
+      printf("NOP executed \n");
       break;
   }
 

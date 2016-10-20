@@ -32,6 +32,7 @@ typedef struct Memory {
 
 typedef struct if_id {
 	int32 ir;
+	string operands;
 } if_id;
 
 typedef struct id_ex {

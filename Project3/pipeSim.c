@@ -132,6 +132,7 @@ id_ex instr_decode(if_id if_id, int *pc) {
     case 5 : //ADDI
       printf("ADDI decoded \n");
       sscanf(if_id.operands, "%*c%d %*c%d %d", &rd, &rs, &imm);
+      printf("ADDI: rd: %d, rs: %d, imm: %d\n", rd, rs, imm);
       output.rd = rd;
       output.rs = rs;
       output.op_A = registers[rs];
@@ -142,6 +143,7 @@ id_ex instr_decode(if_id if_id, int *pc) {
     case 6 : //B
       printf("B decoded \n");
       sscanf(if_id.operands, "%d", &label);
+      printf("B: label: %d", label);
       pc += label;
       output.op_code = 15;
       num_cycles += 4;
@@ -150,6 +152,7 @@ id_ex instr_decode(if_id if_id, int *pc) {
     case 7 : //BEQZ
       printf("BEQZ decoded \n");
       sscanf(if_id.operands, "%*c%d %d", &rs, &label);
+      printf("BEQZ: rs: %d, label: %d \n", rs, label);
       output.rs = rs;
       output.op_A = registers[rs];
       if (output.op_A == 0) {
@@ -162,6 +165,7 @@ id_ex instr_decode(if_id if_id, int *pc) {
     case 8 : //BGE
       printf("BGE decoded \n");
       sscanf(if_id.operands, "%*c%d %*c%d %d", &rs, &rt, &label);
+      printf("BGE: rs: %d, rt: %d, label: %d\n", rs, rt, label);
       output.rs = rs;
       output.rt = rt;
       output.op_A = registers[rs];
@@ -176,6 +180,7 @@ id_ex instr_decode(if_id if_id, int *pc) {
     case 9 : //BNE
       printf("BNE decoded \n");
       sscanf(if_id.operands, "%*c%d %*c%d %d", &rs, &rt, &label);
+      printf("BNE: rs: %d, rt: %d, label: %d\n", rs, rt, label);
       output.rs = rs;
       output.rt = rt;
       output.op_A = registers[rs];
@@ -190,6 +195,7 @@ id_ex instr_decode(if_id if_id, int *pc) {
     case 10 : //LA
       printf("LA decoded \n");
       sscanf(if_id.operands, "%*c%d %d", &rd, &label);
+      printf("LA: rd: %d, label: %d\n", rd, label);
       output.rd = rd;
       output.rs = label;
       output.op_A = memory.data_segment[label].content;
@@ -199,6 +205,7 @@ id_ex instr_decode(if_id if_id, int *pc) {
     case 11 : //LB
       printf("LB decoded \n");
       sscanf(if_id.operands, "%*c%d %*c%d", &rd, &offset);
+      printf("LB: rd: %d, offset: %d\n", rd, offset);
       output.rd = rd;
       output.offset = offset;
       num_cycles += 6;
@@ -266,6 +273,7 @@ ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem_var, mem_wb mem_wb) {
       // left over
       break;
     case 2 : //ADD
+      printf("ADD executed\n");
       output.alu_out = id_ex.op_A + id_ex.op_B;
       break;
     case 3 : //MULT

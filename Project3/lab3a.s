@@ -14,3 +14,4 @@ nop
 
 li $2, 10
 syscall
+end

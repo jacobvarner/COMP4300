@@ -50,3 +50,4 @@ syscall
 b 0
 li $29 2
 syscall
+end

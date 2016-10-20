@@ -16,4 +16,8 @@ li $2 1
 syscall
 li $2 10
 syscall
+<<<<<<< HEAD
 end
+=======
+end
+>>>>>>> 959f8c9e01cc40dea4149caf7bded6d8938991fa

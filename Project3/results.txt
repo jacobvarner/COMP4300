@@ -1,0 +1,27 @@
+GROUP 12 - Jacob Varner (jsv0004) & Tarence Beard Jr. (teb0016)
+COMP 4300 - Project 2: gprSim
+9/29/2016
+
+*******************************************
+
+RESULTS>>>
+
+1. "racecar" -> Palindrome
+ - C = 336
+ - IC = 64
+ - speedup = 1.523810
+
+2. "jacob" -> Not a Palindrome
+ - C = 197
+ - IC = 38
+ - speedup = 1.543147
+
+3. "12345678987654321" -> Palindrome
+ - C = 736
+ - IC = 139
+ - speedup = 1.510870
+
+4. "mississippi" -> Not a Palindrome
+ - C = 323
+ - IC = 62
+ - speedup = 1.535604

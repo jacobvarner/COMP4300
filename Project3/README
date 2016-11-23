@@ -1,14 +1,24 @@
 GROUP 12 - Jacob Varner (jsv0004) & Tarence Beard Jr. (teb0016)
+<<<<<<< HEAD
 COMP 4300 - Project 2: gprSim
 9/29/2016
+=======
+COMP 4300 - Project 3: pipeSim
+10/28/2016
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
 
 *******************************************
 
 USAGE>>>
 
 To compile program: $ make
+<<<<<<< HEAD
 To run gprSiim: $ ./gprSim <assembly-file> <palindrome-test-subject>
 Example: ./gprSim palindrome.s racecar
+=======
+To run pipeSim: $ ./pipeSim <assembly-file>
+Example: ./pipeSim lab3b.s
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
 
 *******************************************
 
@@ -22,17 +32,49 @@ loader.c:
 corresponding memory (Text or Data).
 * while reading instructions, it assigns the OpCode to each instruction.
 
+<<<<<<< HEAD
 gprSim.c
+=======
+pipeSim.c
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
 * runs each instruction based on where the program counter is pointing.
 * stores data in any of the 32 registers, although we only used 7.
 * we used registers[0] - registers[3] for the calculations and then
 registers[29] - registers[31] were used with the syscall function.
+<<<<<<< HEAD
 * upon completion, gprSim outputs the instructions that were read in, whether or
 not the input was a palindrome, and then a summary of the registers along with
+=======
+* upon completion, pipeSim outputs the instructions that were read in, number of instruction executed, 
+total number of clock cycles, number of NOP instructions executed and then a summary of the registers along with
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
 values for C, IC, and speedup.
+
+*******************************************
+
+<<<<<<< HEAD
+ISSUES>>>
+
+No known issues at the moment
+=======
+lab3a.s
+* Total Clock Cycles: 28
+* Total Instructions Executed: 13
+* Number of NOPS: 6
+
+lab3b.s
+* Total Clock Cycles: 138
+* Total Instructions Executed: 28
+* Number of NOPS: 0
+
+lab3c.s
+* Total Clock Cycles: 72
+* Total Instructions Executed: 17
+* Number of NOPS: 1
 
 *******************************************
 
 ISSUES>>>
 
-No known issues at the moment
+Segmentation fault occurs when SYSCALL is executed in lab3b.s and when LI is executed in lab3a.s and lab3c.s.
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b

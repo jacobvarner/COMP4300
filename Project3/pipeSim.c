@@ -39,18 +39,26 @@ void write_back(mem_wb mem_wb_old);
 
 
 int main(int argc, char *argv[]) {
+<<<<<<< HEAD
   if (argc != 3) {
     printf("You must provide an assembly file to be read.");
+=======
+  if (argc != 2) {
+    printf("You must provide an assembly file to be read.\n");
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
     return 1; /* Error: Must provide assembly file to be read. */
   }
 	printf("Loading into memory...\n\n");
 	memory = loadProgramIntoMemory(argv[1]);
 	printf("\nLoading complete!\n\n");
 
+<<<<<<< HEAD
   strcpy(strings[0], argv[2]);
   strcpy(strings[1], "This is a palindrome :)");
   strcpy(strings[2], "This is not a palindrome :(");
 
+=======
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
 	program_counter = 0;
   num_cycles = 0;
   instruction_count = 0;
@@ -68,9 +76,18 @@ int main(int argc, char *argv[]) {
     if_id_new = instr_fetch(currentInstructionCode, currentText.operands, &program_counter);
 
     id_ex_old = id_ex_new;
+<<<<<<< HEAD
     id_ex_new = instr_decode(if_id_old, &program_counter);
 
     ex_mem_old = ex_mem_new;
+=======
+    printf("if_id_old.ir: %d\n", if_id_old.ir);
+    id_ex_new = instr_decode(if_id_old, &program_counter);
+    printf("Before instr_exe; id_ex_new.op_A: %d\n", id_ex_new.op_A);
+
+    ex_mem_old = ex_mem_new;
+    printf("Before instr_exe; id_ex_old.op_A: %d \n\n", id_ex_old.op_A);
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
     ex_mem_new = instr_exe(id_ex_old, ex_mem_old, mem_wb_new);
 
     mem_wb_old = mem_wb_new;
@@ -199,6 +216,10 @@ id_ex instr_decode(if_id if_id, int *pc) {
       output.rd = rd;
       output.rs = label;
       output.op_A = memory.data_segment[label].content;
+<<<<<<< HEAD
+=======
+      printf("output.op_A: %d\n", output.op_A);
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
       num_cycles += 5;
       instruction_count++;
       break;
@@ -242,6 +263,11 @@ id_ex instr_decode(if_id if_id, int *pc) {
       break;
   }
 
+<<<<<<< HEAD
+=======
+  printf("output.op_A: %d\n", output.op_A);
+
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
   return output;
 }
 
@@ -251,6 +277,10 @@ ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem_var, mem_wb mem_wb) {
   // Forwarding
   if (id_ex.rs == ex_mem_var.rd) {
     id_ex.op_A = ex_mem_var.alu_out;
+<<<<<<< HEAD
+=======
+    printf("FORWARDING: %d\n", id_ex.op_A);
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
   }
 
   if (id_ex.rt == ex_mem_var.rd) {
@@ -260,6 +290,10 @@ ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem_var, mem_wb mem_wb) {
   // Mem hazards
   if (mem_wb.rd == id_ex.rs) {
     id_ex.op_A = mem_wb.alu_out;
+<<<<<<< HEAD
+=======
+    printf("MEM HAZARD: %d\n", id_ex.op_A);
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
   }
   if (mem_wb.rd == id_ex.rt) {
     id_ex.op_B = mem_wb.alu_out;
@@ -304,6 +338,10 @@ ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem_var, mem_wb mem_wb) {
       break;
     case 10 : //LA
       printf("LA executed \n");
+<<<<<<< HEAD
+=======
+      printf("id_ex.op_A: %d\n", id_ex.op_A);
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
       output.alu_out = id_ex.op_A;
       break;
     case 11 : //LB
@@ -312,6 +350,10 @@ ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem_var, mem_wb mem_wb) {
       break;
     case 12 : //LI
       printf("LI executed \n");
+<<<<<<< HEAD
+=======
+      printf("OP A: %d \n", id_ex.op_A);
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
       output.alu_out = id_ex.op_A;
       break;
     case 13 : //SUBI
@@ -365,9 +407,19 @@ void write_back(mem_wb mem_wb) {
 }
 
 void syscall() {
+<<<<<<< HEAD
   int32 service_num = registers[29];
   int32 arg1 = registers[30];
   int32 arg2 = registers[31];
+=======
+  printf("%s\n", registers[31]);
+
+  int32 service_num = registers[29];
+
+  int32 arg1 = registers[30];
+  int32 arg2 = registers[31];
+
+>>>>>>> 0245b7d6a7bd9dcce66426d98385c20b837f6b5b
   switch (service_num) {
   	case 0 :
   		readString();

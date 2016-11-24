@@ -6,16 +6,7 @@
 #include "read.h"
 
 #define NUM_REGISTERS 32
-#define NUM_STRINGS 3
-
-Memory code_segment;
-int program_counter;
-int num_cycles;
-int instruction_count;
-int num_nops;
-int run;
-int registers[NUM_REGISTERS];
-string strings[NUM_STRINGS];
+#define NUM_FUS 5
 
 // Setting up latches
 if_id if_id_old, if_id_new;
@@ -24,12 +15,15 @@ ex_mem ex_mem_old, ex_mem_new;
 mem_wb mem_wb_old, mem_wb_new;
 
 void syscall();
-
-if_id instr_fetch(int32 currentInstructionCode, string operands, int *pc);
+if_id instr_fetch(int currentInstructionCode, string operands, int *pc);
 id_ex instr_decode(if_id if_id_old, int *pc);
 ex_mem instr_exe(id_ex id_ex_old, ex_mem ex_mem_old, mem_wb mem_wb_new);
 mem_wb mem_access(ex_mem ex_mem_old);
 void write_back(mem_wb mem_wb_old);
+pc initiate_simulator();
+scoreboard initiate_scoreboard(Memory code_segment);
+void simulator_run(Memory code_segment, pc pc);
+void print_scoreboard(scoreboard scoreboard, Memory code_segment);
 
 
 
@@ -39,19 +33,31 @@ int main(int argc, char *argv[]) {
     return 1; /* Error: Must provide assembly file to be read. */
   }
 
-  char[] program_name = argv[1];
-
 	printf("Loading into memory...\n\n");
-	code_segment = load_program(program_name);
+	Memory code_segment = load_program(argv[1]);
 	printf("\nLoading complete!\n\n");
 
-  pc = initiate_simulator();
+  pc pc = initiate_simulator();
 
   simulator_run(code_segment, pc);
 
   return 0;
 }
 
+void simulator_run(Memory code_segment, pc pc) {
+  int int_register_file[NUM_REGISTERS];
+  float fp_register_file[NUM_REGISTERS];
+
+  scoreboard scoreboard = initiate_scoreboard(code_segment);
+
+  int running = 1;
+
+  while (running) {
+    print_scoreboard(scoreboard, code_segment);
+    running = 0;
+  }
+}
+/*
 	run = 1;
 	Text currentText;
 	int currentInstructionCode;
@@ -103,7 +109,7 @@ if_id instr_fetch(int currentInstructionCode, string operands, int *pc) {
 
 id_ex instr_decode(if_id if_id, int *pc) {
   id_ex output;
-  int32 rd, rs, rt, offset, label, imm;
+  int rd, rs, rt, offset, label, imm;
   output.op_code = if_id.ir;
 
   switch (if_id.ir) {
@@ -338,7 +344,7 @@ ex_mem instr_exe(id_ex id_ex, ex_mem ex_mem_var, mem_wb mem_wb) {
   output.rd = id_ex.rd;
 
   return output;
-}
+} */
 
 pc initiate_simulator() {
   pc pc;
@@ -350,7 +356,64 @@ pc initiate_simulator() {
   return pc;
 }
 
-mem_wb mem_access(ex_mem ex_mem_old){
+scoreboard initiate_scoreboard(Memory code_segment) {
+  scoreboard scoreboard;
+  printf("# Instructions: %d\n", code_segment.num_instructions);
+  i_status i_status[code_segment.num_instructions];
+  for (int i = 0; i < code_segment.num_instructions; i++) {
+    strcpy(i_status[i].instruction, code_segment.text_segment[i].instruction);
+    strcat(i_status[i].instruction, " ");
+    strcat(i_status[i].instruction, code_segment.text_segment[i].operands);
+    i_status[i].issue = 0;
+    i_status[i].read = 0;
+    i_status[i].exe = 0;
+    i_status[i].write = 0;
+  }
+
+  fu_status fu_status[NUM_FUS];
+  strcpy(fu_status[0].name, "Integer");
+  fu_status[0].busy = 0;
+  strcpy(fu_status[1].name, "Mult1");
+  fu_status[1].busy = 0;
+  strcpy(fu_status[2].name, "Mult2");
+  fu_status[2].busy = 0;
+  strcpy(fu_status[3].name, "Add");
+  fu_status[3].busy = 0;
+  strcpy(fu_status[4].name, "Divide");
+  fu_status[4].busy = 0;
+
+  int rr_status[NUM_REGISTERS];
+
+  memcpy(scoreboard.i_status, i_status, sizeof(i_status));
+  memcpy(scoreboard.fu_status, fu_status, sizeof(fu_status));
+  memcpy(scoreboard.rr_status, rr_status, sizeof(rr_status));
+
+  return scoreboard;
+}
+
+void print_scoreboard(scoreboard scoreboard, Memory code_segment) {
+  printf("----------------------------------------------------------------\n");
+  printf("                         SCOREBOARD\n");
+  printf("----------------------------------------------------------------\n\n");
+  printf("Instruction      Issue   Read   Exe.   Write\n");
+  printf("----------------------------------------------------------------\n");
+  for (int i = 0; i < code_segment.num_instructions; i++) {
+    printf("%-15s  %-6d  %-5d  %-5d  %-5d\n", scoreboard.i_status[i].instruction, scoreboard.i_status[i].issue,
+      scoreboard.i_status[i].read, scoreboard.i_status[i].exe, scoreboard.i_status[i].write);
+  }
+  printf("\nName        Busy   Op   Fi   Fj   Fk   Qj   Qk   Rj   Rk\n");
+  printf("----------------------------------------------------------------\n");
+  for (int i = 0; i < NUM_FUS; i++) {
+    printf("%-10s  %-4d   %-2d   %-2d   %-2d   %-2d   %-2d   %-2d   %-2d   %-2d\n", scoreboard.fu_status[i].name,
+      scoreboard.fu_status[i].busy, scoreboard.fu_status[i].op, scoreboard.fu_status[i].fi,
+      scoreboard.fu_status[i].fj, scoreboard.fu_status[i].fk, scoreboard.fu_status[i].qj,
+      scoreboard.fu_status[i].qk, scoreboard.fu_status[i].rj, scoreboard.fu_status[i].rk);
+  }
+  printf("\n\n");
+
+}
+
+/* mem_wb mem_access(ex_mem ex_mem_old){
   mem_wb output;
   if (ex_mem_old.op_code == 11) {
     output.mdr = memory.data_segment[ex_mem_old.alu_out].content;
@@ -383,9 +446,9 @@ void write_back(mem_wb mem_wb) {
 void syscall() {
   printf("%s\n", registers[31]);
 
-  int32 service_num = registers[29];
-  int32 arg1 = registers[30];
-  int32 arg2 = registers[31];
+  int service_num = registers[29];
+  int arg1 = registers[30];
+  int arg2 = registers[31];
 
   switch (service_num) {
   	case 0 :
@@ -397,13 +460,4 @@ void syscall() {
   	case 2 :
   		run = 0;
   }
-}
-
-void readString() {
-	// Empty stub for now
-  //printf("readString()\n");
-}
-
-void writeString() {
-	printf("%s\n", strings[registers[31]]);
-}
+} */

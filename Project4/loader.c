@@ -15,10 +15,10 @@ Memory load_program(char program_file_path[]) {
 	char line[SIZE_OF_BUFFER];
 	Memory code_segment;
 	int counter = 0;
-	int32 text_segment_index = 0;
-	int32 data_segment_index = 0;
-	int32 nextTextSegmentAddress = TEXT_SEGMENT_BASE_ADDRESS;
-	int32 nextDataSegmentAddress = DATA_SEGMENT_BASE_ADDRESS;
+	int text_segment_index = 0;
+	int data_segment_index = 0;
+	int nextTextSegmentAddress = TEXT_SEGMENT_BASE_ADDRESS;
+	int nextDataSegmentAddress = DATA_SEGMENT_BASE_ADDRESS;
 	while(fgets(line, SIZE_OF_BUFFER, program_file_ptr) != NULL) {
 		//printf("Loop start \n");
 		if (line[0] == '#') {
@@ -35,6 +35,7 @@ Memory load_program(char program_file_path[]) {
 			sscanf(line, "%s %[^\n]", code_segment.text_segment[text_segment_index].instruction, code_segment.text_segment[text_segment_index].operands);
 			code_segment.text_segment[text_segment_index].instruction_code = assignInstructionCode(code_segment.text_segment[text_segment_index].instruction);
 			text_segment_index++;
+			counter++;
 		} else if(currentSegment == data) { // In Data Segment
 			if (line[0] == '\n') {
 				printf("\n");
@@ -51,6 +52,7 @@ Memory load_program(char program_file_path[]) {
 		}
 	}
 	fclose(program_file_ptr);
+	code_segment.num_instructions = counter;
 	return code_segment;
 }
 

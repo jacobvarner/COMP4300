@@ -29,9 +29,9 @@ pc initiate_simulator();
 scoreboard initiate_scoreboard(Memory code_segment);
 void simulator_run(Memory code_segment, pc pc);
 void print_scoreboard(scoreboard scoreboard, Memory code_segment);
-bool issue_instruction(socreboard scoreboard, Memory code_segment, pc pc, Memory fetch_buffer);
+bool issue_instruction(scoreboard scoreboard, Memory code_segment, pc pc, Memory fetch_buffer);
 op decode(Text instruction);
-bool check_fu_status(fu_status fu_status, op op);
+bool check_fu_busy(scoreboard scoreboard, op op);
 bool check_waw(scoreboard scoreboard, op op);
 void set_fetch_buffer(Memory fetch_buffer, Text instruction);
 
@@ -58,6 +58,7 @@ void simulator_run(Memory code_segment, pc pc) {
   int int_register_file[NUM_REGISTERS];
   float fp_register_file[NUM_FP_REGISTERS];
   Memory fetch_buffer;
+  fetch_buffer.num_instructions = 0;
 
   scoreboard scoreboard = initiate_scoreboard(code_segment);
 
@@ -110,10 +111,20 @@ scoreboard initiate_scoreboard(Memory code_segment) {
   fu_status[4].busy = 0;
 
   int r_status[NUM_REGISTERS];
+  int fpr_status[NUM_FP_REGISTERS];
+
+  for (int i = 0; i < NUM_REGISTERS; i++) {
+    r_status[i] = -1;
+  }
+
+  for (int i = 0; i < NUM_FP_REGISTERS; i++) {
+    fpr_status[i] = -1;
+  }
 
   memcpy(scoreboard.i_status, i_status, sizeof(i_status));
   memcpy(scoreboard.fu_status, fu_status, sizeof(fu_status));
   memcpy(scoreboard.r_status, r_status, sizeof(r_status));
+  memcpy(scoreboard.fpr_status, fpr_status, sizeof(fpr_status));
 
   return scoreboard;
 }
@@ -136,47 +147,47 @@ void print_scoreboard(scoreboard scoreboard, Memory code_segment) {
       scoreboard.fu_status[i].fj, scoreboard.fu_status[i].fk, scoreboard.fu_status[i].qj,
       scoreboard.fu_status[i].qk, scoreboard.fu_status[i].rj, scoreboard.fu_status[i].rk);
   }
-  printf("\n\n");
+  printf("\n");
   printf("Registers     0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15\n");
   printf("----------------------------------------------------------------\n");
+  printf("              ");
   for (int i = 0; i < 16; i++) {
-    printf("              ");
     if (scoreboard.r_status[i] != -1) {
       printf("%-2d ", scoreboard.r_status[i]);
     } else {
-      printf("   ");
+      printf("X  ");
     }
-    printf("\n\n");
   }
+  printf("\n\n");
   printf("Registers     16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31\n");
-  printf("----------------------------------------------------------------\n")
+  printf("----------------------------------------------------------------\n");
+  printf("              ");
   for (int i = 16; i < 32; i++) {
-    printf("              ");
     if (scoreboard.r_status[i] != -1) {
       printf("%-2d ", scoreboard.r_status[i]);
     } else {
-      printf("   ");
+      printf("X  ");
     }
-    printf("\n\n");
   }
+  printf("\n\n");
   printf("FP Registers  0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15\n");
-  printf("----------------------------------------------------------------\n")
+  printf("----------------------------------------------------------------\n");
+  printf("              ");
   for (int i = 0; i < 16; i++) {
-    printf("              ");
     if (scoreboard.fpr_status[i] != -1) {
       printf("%-2d ", scoreboard.fpr_status[i]);
     } else {
-      printf("   ");
+      printf("X  ");
     }
-    printf("\n\n");
   }
+  printf("\n\n");
 }
 
-bool issue_instruction(socreboard scoreboard, Memory code_segment, pc pc, Memory fetch_buffer) {
+bool issue_instruction(scoreboard scoreboard, Memory code_segment, pc pc, Memory fetch_buffer) {
   Text instruction = code_segment.text_segment[pc.program_counter];
   // gets the operands from the instruction
   op op = decode(instruction);
-  if (check_fu_busy(scoreboard.fu_status, op) == true) {
+  if (check_fu_busy(scoreboard, op) == true) {
     // Stall
     printf("STALL\n");
     return true;
@@ -201,10 +212,10 @@ op decode(Text instruction) {
       op.reg_dest = -1;
       break;
     case 1: // add
-      sscanf(instruction.operands, "%*c%d %*c%d %d", op.reg_dest, op.reg_a, op.reg_b);
+      sscanf(instruction.operands, "%*c%d %*c%d %d", &op.reg_dest, &op.reg_a, &op.reg_b);
       break;
     case 2: // addi
-      sscanf(instruction.operands, "%*c%d %*c%d", op.reg_dest, op.reg_a);
+      sscanf(instruction.operands, "%*c%d %*c%d", &op.reg_dest, &op.reg_a);
       op.reg_b = -1;
       break;
     case 3: // b
@@ -213,34 +224,34 @@ op decode(Text instruction) {
       op.reg_dest = -1;
       break;
     case 4: // beqz
-      sscanf(instruction.operands, "%*c%d", op.reg_a);
+      sscanf(instruction.operands, "%*c%d", &op.reg_a);
       op.reg_b = -1;
       op.reg_dest = -1;
       break;
     case 5: // bge
-      sscanf(instruction.operands, "%*c%d %*c%d", op.reg_a, op.reg_b);
+      sscanf(instruction.operands, "%*c%d %*c%d", &op.reg_a, &op.reg_b);
       op.reg_dest = -1;
       break;
     case 6: // bne
-      sscanf(instruction.operands, "%*c%d %*c%d", op.reg_a, op.reg_b);
+      sscanf(instruction.operands, "%*c%d %*c%d", &op.reg_a, &op.reg_b);
       op.reg_dest = -1;
       break;
     case 7: // la
-      sscanf(instruction.operands, "%*c%d", op.reg_dest);
+      sscanf(instruction.operands, "%*c%d", &op.reg_dest);
       op.reg_a = -1;
       op.reg_b = -1;
       break;
     case 8: // lb
-      sscanf(instruction.operands, "%*c%d %*c%d", op.reg_dest, op.reg_a);
+      sscanf(instruction.operands, "%*c%d %*c%d", &op.reg_dest, &op.reg_a);
       op.reg_b = -1;
       break;
     case 9: // li
-      sscanf(instruction.operands, "%*c%d", op.reg_dest);
+      sscanf(instruction.operands, "%*c%d", &op.reg_dest);
       op.reg_a = -1;
       op.reg_b = -1;
       break;
     case 10: // subi
-      sscanf(instruction.operands, "%*c%d %*c%d", op.reg_dest, op.reg_a);
+      sscanf(instruction.operands, "%*c%d %*c%d", &op.reg_dest, &op.reg_a);
       op.reg_b = -1;
       break;
     case 11: // syscall
@@ -249,20 +260,20 @@ op decode(Text instruction) {
       op.reg_dest = -1;
       break;
     case 12: // fadd
-      sscanf(instruction.operands, "%*c%d %*c%d %d", op.reg_dest, op.reg_a, op.reg_b);
+      sscanf(instruction.operands, "%*c%d %*c%d %d", &op.reg_dest, &op.reg_a, &op.reg_b);
       break;
     case 13: // fmul
-      sscanf(instruction.operands, "%*c%d %*c%d %d", op.reg_dest, op.reg_a, op.reg_b);
+      sscanf(instruction.operands, "%*c%d %*c%d %d", &op.reg_dest, &op.reg_a, &op.reg_b);
       break;
     case 14: // fsub
-      sscanf(instruction.operands, "%*c%d %*c%d %d", op.reg_dest, op.reg_a, op.reg_b);
+      sscanf(instruction.operands, "%*c%d %*c%d %d", &op.reg_dest, &op.reg_a, &op.reg_b);
       break;
     case 15: // l.d
-      sscanf(instruction.operands, "%*c%d %*c%d", op.reg_dest, op.reg_a);
+      sscanf(instruction.operands, "%*c%d %*c%d", &op.reg_dest, &op.reg_a);
       op.reg_b = -1;
       break;
     case 16: // s.d
-      sscanf(instruction.operands, "%*c%d %*c%d", op.reg_a, op.reg_dest);
+      sscanf(instruction.operands, "%*c%d %*c%d", &op.reg_a, &op.reg_dest);
       op.reg_b = -1;
       break;
   }
@@ -270,41 +281,41 @@ op decode(Text instruction) {
   return op;
 }
 
-bool check_fu_status(fu_status fu_status, op op) {
+bool check_fu_busy(scoreboard scoreboard, op op) {
   if (op.op_code >= 3 && op.op_code <= 6) {
     // Branch FU
-    if (fu_status[0].busy == 1) {
+    if (scoreboard.fu_status[0].busy == 1) {
       return true;
     } else {
       return false;
     }
   } else if (op.op_code == 13) {
     // Multiply FU
-    if (fu_status[1].busy == 1) {
+    if (scoreboard.fu_status[1].busy == 1) {
       return true;
     } else {
       return false;
     }
-  } else if (op.op_code == 10 || op.op_code = 14) {
-    if (fu_status[2].busy == 1) {
+  } else if (op.op_code == 10 || op.op_code == 14) {
+    if (scoreboard.fu_status[2].busy == 1) {
       return true;
     } else {
       return false;
     }
   } else if (op.op_code == 1 || op.op_code == 2 || op.op_code == 12) {
-    if (fu_status[3].busy == 1) {
+    if (scoreboard.fu_status[3].busy == 1) {
       return true;
     } else {
       return false;
     }
-  } else if (op.op_code => 7 && op.op_code <= 9) {
-    if (fu_status[4].busy == 1) {
+  } else if (op.op_code >= 7 && op.op_code <= 9) {
+    if (scoreboard.fu_status[4].busy == 1) {
       return true;
     } else {
       return false;
     }
   } else if (op.op_code == 16 || op.op_code == 16) {
-    if (fu_status[4].busy == 1) {
+    if (scoreboard.fu_status[4].busy == 1) {
       return true;
     } else {
       return false;
@@ -321,7 +332,7 @@ bool check_waw(scoreboard scoreboard, op op) {
       // No destination register
       return false;
     }
-    if (r_status[op.reg_dest] != -1) {
+    if (scoreboard.r_status[op.reg_dest] != -1) {
       // destination register is in use
       return true;
     } else {
@@ -333,7 +344,7 @@ bool check_waw(scoreboard scoreboard, op op) {
       // No destination register
       return false;
     }
-    if (fpr_status[op.reg_dest] != -1) {
+    if (scoreboard.fpr_status[op.reg_dest] != -1) {
       // destination registers is in user
       return true;
     } else {
@@ -343,7 +354,14 @@ bool check_waw(scoreboard scoreboard, op op) {
 }
 
 void set_fetch_buffer(Memory fetch_buffer, Text instruction) {
-
+  Text temp;
+  // Copies the instruction to a temporary variable
+  temp.instruction_code = instruction.instruction_code;
+  strcpy(temp.instruction, instruction.instruction);
+  strcpy(temp.operands, instruction.operands);
+  // Stores the instruction in the buffer at the first available index
+  fetch_buffer.text_segment[fetch_buffer.num_instructions] = temp;
+  fetch_buffer.num_instructions++;
 }
 
 /* mem_wb mem_access(ex_mem ex_mem_old){

@@ -65,7 +65,7 @@ typedef struct op {
 	int reg_a;
 	int reg_b;
 	int reg_dest;
-}
+} op;
 
 typedef struct pc {
 	int program_counter;

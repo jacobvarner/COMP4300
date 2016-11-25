@@ -9,6 +9,7 @@
 #define MAX_NUM_INSTRUCTIONS 100
 #define NUM_FUS 5
 #define NUM_REGISTERS 32
+#define NUM_FP_REGISTERS 16
 typedef char string[MAX_LENGTH_OF_STRING];
 
 
@@ -59,6 +60,13 @@ typedef struct mem_wb {
 	int rd;
 } mem_wb;
 
+typedef struct op {
+	int op_code;
+	int reg_a;
+	int reg_b;
+	int reg_dest;
+}
+
 typedef struct pc {
 	int program_counter;
 	int num_cycles;
@@ -80,14 +88,15 @@ typedef struct fu_status {
 	int busy; //0 = no, 1 = yes
 	int op; // operation code
 	int fi, fj, fk; //register address
-	int qj, qk; //0 = Integer, 1 = Mult1, 2 = Mult2, 3 = Add, 4 = Divide
+	int qj, qk; //0 = Integer, 1 = Multiply, 2 = Subtract, 3 = Add, 4 = Load/Store
 	int rj, rk; //0 = no, 1 = yes
 } fu_status;
 
 typedef struct scoreboard {
 	i_status i_status[MAX_NUM_INSTRUCTIONS];
 	fu_status fu_status[NUM_FUS];
-	int rr_status[NUM_REGISTERS];
+	int r_status[NUM_REGISTERS];
+	int fpr_status[NUM_FP_REGISTERS];
 } scoreboard;
 
 #endif // MEMORY_H_

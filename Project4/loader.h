@@ -11,5 +11,6 @@ Memory load_program(char program_file_path[]);
 void setCurrentSegment(char line[]);
 
 int assignInstructionCode(string instruction);
+int assignInstructionType(int instruction_code);
 
 #endif // LOADER_H_

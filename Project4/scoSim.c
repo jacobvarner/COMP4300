@@ -202,6 +202,104 @@ bool issue_instruction(scoreboard *scoreboard, Memory code_segment, pc *pc, Memo
     return true;
   }
   set_fetch_buffer(*fetch_buffer, instruction);
+  // Updates the FU Status portion of the scoreboard
+  switch (op.op_type) {
+    case 0: // Branch
+      scoreboard->fu_status[0].busy = 1;
+      scoreboard->fu_status[0].op = op.op_code;
+      if (op.reg_dest != -1) {
+        scoreboard->fu_status[0].fi = op.reg_dest;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[0].fj = op.reg_a;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[0].fk = op.reg_b;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[0].rj = 1;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[0].rk = 1;
+      }
+      break;
+    case 1: // Multiply
+      scoreboard->fu_status[1].busy = 1;
+      scoreboard->fu_status[1].op = op.op_code;
+      if (op.reg_dest != -1) {
+        scoreboard->fu_status[1].fi = op.reg_dest;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[1].fj = op.reg_a;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[1].fk = op.reg_b;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[1].rj = 1;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[1].rk = 1;
+      }
+      break;
+    case 2: // Add
+      scoreboard->fu_status[2].busy = 1;
+      scoreboard->fu_status[2].op = op.op_code;
+      if (op.reg_dest != -1) {
+        scoreboard->fu_status[2].fi = op.reg_dest;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[2].fj = op.reg_a;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[2].fk = op.reg_b;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[2].rj = 1;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[2].rk = 1;
+      }
+      break;
+    case 3: // Subtract
+      scoreboard->fu_status[3].busy = 1;
+      scoreboard->fu_status[3].op = op.op_code;
+      if (op.reg_dest != -1) {
+        scoreboard->fu_status[3].fi = op.reg_dest;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[3].fj = op.reg_a;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[3].fk = op.reg_b;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[3].rj = 1;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[3].rk = 1;
+      }
+      break;
+    case 4: // Load/Store
+      scoreboard->fu_status[4].busy = 1;
+      scoreboard->fu_status[4].op = op.op_code;
+      if (op.reg_dest != -1) {
+        scoreboard->fu_status[4].fi = op.reg_dest;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[4].fj = op.reg_a;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[4].fk = op.reg_b;
+      }
+      if (op.reg_a != -1) {
+        scoreboard->fu_status[4].rj = 1;
+      }
+      if (op.reg_b != -1) {
+        scoreboard->fu_status[4].rk = 1;
+      }
+      break;
+  }
   scoreboard->i_status[pc->program_counter].issue = pc->num_cycles + 1;
   pc->program_counter++;
   return false;
@@ -210,6 +308,7 @@ bool issue_instruction(scoreboard *scoreboard, Memory code_segment, pc *pc, Memo
 op decode(Text instruction) {
   op op;
   op.op_code = instruction.instruction_code;
+  op.op_type = instruction.instruction_type;
   switch (instruction.instruction_code) {
     case 0: // nop
       op.reg_a = -1;
@@ -287,39 +386,36 @@ op decode(Text instruction) {
 }
 
 bool check_fu_busy(scoreboard scoreboard, op op) {
-  if (op.op_code >= 3 && op.op_code <= 6) {
+  if (op.op_type == 0) {
     // Branch FU
     if (scoreboard.fu_status[0].busy == 1) {
       return true;
     } else {
       return false;
     }
-  } else if (op.op_code == 13) {
+  } else if (op.op_type == 1) {
     // Multiply FU
     if (scoreboard.fu_status[1].busy == 1) {
       return true;
     } else {
       return false;
     }
-  } else if (op.op_code == 10 || op.op_code == 14) {
+  } else if (op.op_type == 2) {
+    // Add FU
     if (scoreboard.fu_status[2].busy == 1) {
       return true;
     } else {
       return false;
     }
-  } else if (op.op_code == 1 || op.op_code == 2 || op.op_code == 12) {
+  } else if (op.op_type == 3) {
+    // Subtract FU
     if (scoreboard.fu_status[3].busy == 1) {
       return true;
     } else {
       return false;
     }
-  } else if (op.op_code >= 7 && op.op_code <= 9) {
-    if (scoreboard.fu_status[4].busy == 1) {
-      return true;
-    } else {
-      return false;
-    }
-  } else if (op.op_code == 16 || op.op_code == 16) {
+  } else if (op.op_type == 4) {
+    // Load/Store FU
     if (scoreboard.fu_status[4].busy == 1) {
       return true;
     } else {
@@ -332,7 +428,7 @@ bool check_fu_busy(scoreboard scoreboard, op op) {
 
 bool check_waw(scoreboard scoreboard, op op) {
   if (op.op_code <= 11) {
-    // Integoer registers
+    // Integer registers
     if (op.reg_dest == -1) {
       // No destination register
       return false;

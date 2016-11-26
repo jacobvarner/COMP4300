@@ -34,6 +34,7 @@ Memory load_program(char program_file_path[]) {
 			nextTextSegmentAddress++;
 			sscanf(line, "%s %[^\n]", code_segment.text_segment[text_segment_index].instruction, code_segment.text_segment[text_segment_index].operands);
 			code_segment.text_segment[text_segment_index].instruction_code = assignInstructionCode(code_segment.text_segment[text_segment_index].instruction);
+			code_segment.text_segment[text_segment_index].instruction_type = assignInstructionType(code_segment.text_segment[text_segment_index].instruction_code);
 			text_segment_index++;
 			counter++;
 		} else if(currentSegment == data) { // In Data Segment
@@ -104,5 +105,63 @@ int assignInstructionCode(string instruction) {
 		printf("Not an instruction");
 	}
 
+	return output;
+}
+
+int assignInstructionType(int instruction_code) {
+	int output;
+	switch (instruction_code) {
+		case 0:
+			output = -1;
+			break;
+		case 1:
+			output = 3;
+			break;
+		case 2:
+			output = 3;
+			break;
+		case 3:
+			output = 0;
+			break;
+		case 4:
+			output = 0;
+			break;
+		case 5:
+			output = 0;
+			break;
+		case 6:
+			output = 0;
+			break;
+		case 7:
+			output = 4;
+			break;
+		case 8:
+			output = 4;
+			break;
+		case 9:
+			output = 4;
+			break;
+		case 10:
+			output = 2;
+			break;
+		case 11:
+			output = -1;
+			break;
+		case 12:
+			output = 3;
+			break;
+		case 13:
+			output = 1;
+			break;
+		case 14:
+			output = 2;
+			break;
+		case 15:
+			output = 4;
+			break;
+		case 16:
+			output = 4;
+			break;
+	}
 	return output;
 }

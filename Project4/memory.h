@@ -18,6 +18,7 @@ typedef struct text {
 	string instruction;
 	int instruction_code;
 	string operands;
+	int instruction_type;
 } Text;
 
 typedef struct data {
@@ -62,6 +63,7 @@ typedef struct mem_wb {
 
 typedef struct op {
 	int op_code;
+	int op_type;
 	int reg_a;
 	int reg_b;
 	int reg_dest;

@@ -27,13 +27,14 @@ mem_wb mem_access(ex_mem ex_mem_old);
 void write_back(mem_wb mem_wb_old);
 pc initiate_simulator();
 scoreboard initiate_scoreboard(Memory code_segment);
-void simulator_run(Memory code_segment, pc pc);
+void simulator_run(Memory code_segment, pc *pc);
 void print_scoreboard(scoreboard scoreboard, Memory code_segment);
-bool issue_instruction(scoreboard scoreboard, Memory code_segment, pc pc, Memory fetch_buffer);
+bool issue_instruction(scoreboard *scoreboard, Memory code_segment, pc *pc, Memory *fetch_buffer);
 op decode(Text instruction);
 bool check_fu_busy(scoreboard scoreboard, op op);
 bool check_waw(scoreboard scoreboard, op op);
 void set_fetch_buffer(Memory fetch_buffer, Text instruction);
+void read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer);
 
 
 
@@ -49,12 +50,12 @@ int main(int argc, char *argv[]) {
 
   pc pc = initiate_simulator();
 
-  simulator_run(code_segment, pc);
+  simulator_run(code_segment, &pc);
 
   return 0;
 }
 
-void simulator_run(Memory code_segment, pc pc) {
+void simulator_run(Memory code_segment, pc *pc) {
   int int_register_file[NUM_REGISTERS];
   float fp_register_file[NUM_FP_REGISTERS];
   Memory fetch_buffer;
@@ -66,9 +67,12 @@ void simulator_run(Memory code_segment, pc pc) {
 
   while (running) {
     // Prints the scoreboard in its current state to help debug
+    printf("PC: %d\n", pc->program_counter);
     print_scoreboard(scoreboard, code_segment);
-
-    bool stall = issue_instruction(scoreboard, code_segment, pc, fetch_buffer);
+    bool stall = issue_instruction(&scoreboard, code_segment, pc, &fetch_buffer);
+    read_operands(scoreboard, int_register_file, fp_register_file, fetch_buffer);
+    printf("PC: %d\n", pc->program_counter);
+    print_scoreboard(scoreboard, code_segment);
 
     running = 0;
   }
@@ -183,22 +187,23 @@ void print_scoreboard(scoreboard scoreboard, Memory code_segment) {
   printf("\n\n");
 }
 
-bool issue_instruction(scoreboard scoreboard, Memory code_segment, pc pc, Memory fetch_buffer) {
-  Text instruction = code_segment.text_segment[pc.program_counter];
+bool issue_instruction(scoreboard *scoreboard, Memory code_segment, pc *pc, Memory *fetch_buffer) {
+  Text instruction = code_segment.text_segment[pc->program_counter];
   // gets the operands from the instruction
   op op = decode(instruction);
-  if (check_fu_busy(scoreboard, op) == true) {
+  if (check_fu_busy(*scoreboard, op) == true) {
     // Stall
     printf("STALL\n");
     return true;
   }
-  if (check_waw(scoreboard, op) == true) {
+  if (check_waw(*scoreboard, op) == true) {
     // Stall
     printf("STALL\n");
     return true;
   }
-  set_fetch_buffer(fetch_buffer, instruction);
-  pc.program_counter++;
+  set_fetch_buffer(*fetch_buffer, instruction);
+  scoreboard->i_status[pc->program_counter].issue = pc->num_cycles + 1;
+  pc->program_counter++;
   return false;
 }
 
@@ -362,6 +367,10 @@ void set_fetch_buffer(Memory fetch_buffer, Text instruction) {
   // Stores the instruction in the buffer at the first available index
   fetch_buffer.text_segment[fetch_buffer.num_instructions] = temp;
   fetch_buffer.num_instructions++;
+}
+
+void read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer){
+  // TODO
 }
 
 /* mem_wb mem_access(ex_mem ex_mem_old){

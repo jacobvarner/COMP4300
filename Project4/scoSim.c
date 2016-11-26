@@ -35,6 +35,8 @@ bool check_fu_busy(scoreboard scoreboard, op op);
 bool check_waw(scoreboard scoreboard, op op);
 void set_fetch_buffer(Memory fetch_buffer, Text instruction);
 void read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer);
+void fu_execution(scoreboard *scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer);
+void write_result(scoreboard *scoreboard, int *int_register_file[], float *fp_register_file[], Memory *fetch_buffer);
 char zero(int input);
 
 
@@ -68,12 +70,15 @@ void simulator_run(Memory code_segment, pc *pc) {
 
   while (running) {
     // Prints the scoreboard in its current state to help debug
-    printf("PC: %d\n", pc->program_counter);
+    //printf("PC: %d\n", pc->program_counter);
     print_scoreboard(scoreboard, code_segment);
     bool stall = issue_instruction(&scoreboard, code_segment, pc, &fetch_buffer);
-    read_operands(scoreboard, int_register_file, fp_register_file, fetch_buffer);
-    printf("PC: %d\n", pc->program_counter);
-    print_scoreboard(scoreboard, code_segment);
+    read_operands(&scoreboard, int_register_file, fp_register_file, fetch_buffer);
+    //printf("PC: %d\n", pc->program_counter);
+    //print_scoreboard(scoreboard, code_segment);
+    fu_execution(&scoreboard, int_register_file, fp_register_file, fetch_buffer);
+    write_result(&scoreboard, &int_register_file, &fp_register_file, &fetch_buffer);
+    pc->num_cycles++;
 
     running = 0;
   }
@@ -477,7 +482,15 @@ void set_fetch_buffer(Memory fetch_buffer, Text instruction) {
   fetch_buffer.num_instructions++;
 }
 
-void read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer){
+void read_operands(scoreboard *scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer) {
+  // TODO
+}
+
+void fu_execution(scoreboard *scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer) {
+  // TODO
+}
+
+void write_result(scoreboard *scoreboard, int *int_register_file[], float *fp_register_file[], Memory *fetch_buffer) {
   // TODO
 }
 

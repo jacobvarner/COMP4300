@@ -35,6 +35,7 @@ bool check_fu_busy(scoreboard scoreboard, op op);
 bool check_waw(scoreboard scoreboard, op op);
 void set_fetch_buffer(Memory fetch_buffer, Text instruction);
 void read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer);
+char zero(int input);
 
 
 
@@ -140,16 +141,16 @@ void print_scoreboard(scoreboard scoreboard, Memory code_segment) {
   printf("Instruction      Issue   Read   Exe.   Write\n");
   printf("----------------------------------------------------------------\n");
   for (int i = 0; i < code_segment.num_instructions; i++) {
-    printf("%-15s  %-6d  %-5d  %-5d  %-5d\n", scoreboard.i_status[i].instruction, scoreboard.i_status[i].issue,
-      scoreboard.i_status[i].read, scoreboard.i_status[i].exe, scoreboard.i_status[i].write);
+    printf("%-15s  %-6c  %-5c  %-5c  %-5c\n", scoreboard.i_status[i].instruction, zero(scoreboard.i_status[i].issue),
+      zero(scoreboard.i_status[i].read), zero(scoreboard.i_status[i].exe), zero(scoreboard.i_status[i].write));
   }
   printf("\nName        Busy   Op   Fi   Fj   Fk   Qj   Qk   Rj   Rk\n");
   printf("----------------------------------------------------------------\n");
   for (int i = 0; i < NUM_FUS; i++) {
-    printf("%-10s  %-4d   %-2d   %-2d   %-2d   %-2d   %-2d   %-2d   %-2d   %-2d\n", scoreboard.fu_status[i].name,
-      scoreboard.fu_status[i].busy, scoreboard.fu_status[i].op, scoreboard.fu_status[i].fi,
-      scoreboard.fu_status[i].fj, scoreboard.fu_status[i].fk, scoreboard.fu_status[i].qj,
-      scoreboard.fu_status[i].qk, scoreboard.fu_status[i].rj, scoreboard.fu_status[i].rk);
+    printf("%-10s  %-4d   %-2c   %-2c   %-2c   %-2c   %-2c   %-2c   %-2c   %-2c\n", scoreboard.fu_status[i].name,
+      scoreboard.fu_status[i].busy, zero(scoreboard.fu_status[i].op), zero(scoreboard.fu_status[i].fi),
+      zero(scoreboard.fu_status[i].fj), zero(scoreboard.fu_status[i].fk), zero(scoreboard.fu_status[i].qj),
+      zero(scoreboard.fu_status[i].qk), zero(scoreboard.fu_status[i].rj), zero(scoreboard.fu_status[i].rk));
   }
   printf("\n");
   printf("Registers     0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15\n");
@@ -159,7 +160,7 @@ void print_scoreboard(scoreboard scoreboard, Memory code_segment) {
     if (scoreboard.r_status[i] != -1) {
       printf("%-2d ", scoreboard.r_status[i]);
     } else {
-      printf("X  ");
+      printf("   ");
     }
   }
   printf("\n\n");
@@ -170,7 +171,7 @@ void print_scoreboard(scoreboard scoreboard, Memory code_segment) {
     if (scoreboard.r_status[i] != -1) {
       printf("%-2d ", scoreboard.r_status[i]);
     } else {
-      printf("X  ");
+      printf("   ");
     }
   }
   printf("\n\n");
@@ -181,7 +182,7 @@ void print_scoreboard(scoreboard scoreboard, Memory code_segment) {
     if (scoreboard.fpr_status[i] != -1) {
       printf("%-2d ", scoreboard.fpr_status[i]);
     } else {
-      printf("X  ");
+      printf("   ");
     }
   }
   printf("\n\n");
@@ -300,6 +301,17 @@ bool issue_instruction(scoreboard *scoreboard, Memory code_segment, pc *pc, Memo
       }
       break;
   }
+  // Updates the register status in the scoreboard
+  if (op.op_code <= 11) {
+    if (op.reg_dest != -1) {
+      scoreboard->r_status[op.reg_dest] = op.op_type;
+    }
+  } else {
+    if (op.reg_dest != -1) {
+      scoreboard->fpr_status[op.reg_dest] = op.op_type;
+    }
+  }
+  // Updates the instruction status in the scoreboard
   scoreboard->i_status[pc->program_counter].issue = pc->num_cycles + 1;
   pc->program_counter++;
   return false;
@@ -467,6 +479,15 @@ void set_fetch_buffer(Memory fetch_buffer, Text instruction) {
 
 void read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer){
   // TODO
+}
+
+char zero(int input) {
+  if (input == 0) {
+    return ' ';
+  } else {
+    char c = input + '0';
+    return c;
+  }
 }
 
 /* mem_wb mem_access(ex_mem ex_mem_old){

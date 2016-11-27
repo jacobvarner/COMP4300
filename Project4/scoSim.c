@@ -35,8 +35,8 @@ bool check_fu_busy(scoreboard scoreboard, op op);
 bool check_waw(scoreboard scoreboard, op op);
 bool check_raw(scoreboard scoreboard, op op);
 void set_fetch_buffer(Memory fetch_buffer, Text instruction);
-exe_instruction read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer);
-exe_instruction fu_execution(scoreboard *scoreboard, exe_instruction *instr);
+exe_instruction read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer, pc pc);
+exe_instruction fu_execution(scoreboard *scoreboard, exe_instruction *instr, pc *pc);
 void write_result(scoreboard *scoreboard, int *int_register_file[], float *fp_register_file[], Memory *fetch_buffer, exe_instruction instr);
 char zero(int input);
 
@@ -74,10 +74,10 @@ void simulator_run(Memory code_segment, pc *pc) {
     //printf("PC: %d\n", pc->program_counter);
     print_scoreboard(scoreboard, code_segment);
     bool stall = issue_instruction(&scoreboard, code_segment, &pc, &fetch_buffer);
-    exe_instruction instr read_operands(&scoreboard, int_register_file, fp_register_file, fetch_buffer, pc);
+    exe_instruction instr = read_operands(&scoreboard, int_register_file, fp_register_file, fetch_buffer, pc);
     //printf("PC: %d\n", pc->program_counter);
     //print_scoreboard(scoreboard, code_segment);
-    fu_execution(&scoreboard, &instr);
+    instr = fu_execution(&scoreboard, &instr, &pc);
     write_result(&scoreboard, &int_register_file, &fp_register_file, &fetch_buffer);
     pc->num_cycles++;
 
@@ -503,6 +503,8 @@ exe_instruction read_operands(scoreboard *scoreboard, int int_register_file[], f
         }
         if (op.reg_b != -1) {
           instr.fp_b_value = fp_register_file[op.reg_b];
+        } else {
+          sscanf(instruction.operands, "%d", &instr.fp_b_value);
         }
         break;
       case 1:
@@ -520,11 +522,13 @@ exe_instruction read_operands(scoreboard *scoreboard, int int_register_file[], f
         }
         if (op.reg_b != -1) {
           instr.reg_b_value = int_register_file[op.reg_b];
+        } else {
+          sscanf(instruction.operands, "%d", &instr.int_b_value);
         }
         break;
     }
     // Update scoreboard
-    for (int i = 0; i < instruction.num_instructions; i++) {
+    for (int i = 0; i < fetch_buffer.num_instructions; i++) {
         if (scoreboard->i_status[i].read == 0) {
           scoreboard->i_status[i].read = pc.num_cycles + 1;
           break;
@@ -534,8 +538,46 @@ exe_instruction read_operands(scoreboard *scoreboard, int int_register_file[], f
   }
 }
 
-exe_instruction fu_execution(scoreboard *scoreboard, exe_instruction *instr) {
-  
+exe_instruction fu_execution(scoreboard *scoreboard, exe_instruction *instr, pc *pc) {
+  switch (instr->op_code) {
+    case 0: // nop
+      pc->num_nops++;
+      break;
+    case 1: // add
+      instr->int_dest_value = instr->int_a_value + instr->int_b_value;
+      break;
+    case 2: // addi
+      instr->int_dest_value = instr->int_a_value + instr->int_b_value;
+      break;
+    case 3: // b
+      break;
+    case 4: // beqz
+      break;
+    case 5: // bge
+      break;
+    case 6: // bne
+      break;
+    case 7: // la
+      break;
+    case 8: // lb
+      break;
+    case 9: // li
+      break;
+    case 10: // subi
+      break;
+    case 11: // syscall
+      break;
+    case 12: // fadd
+      break;
+    case 13: // fmul
+      break;
+    case 14: // fsub
+      break;
+    case 15: // l.d
+      break;
+    case 16: // s.d
+      break;
+  }
 }
 
 void write_result(scoreboard *scoreboard, int *int_register_file[], float *fp_register_file[], Memory *fetch_buffer) {
@@ -563,52 +605,3 @@ bool check_raw(scoreboard scoreboard, op op) {
     }
   }
 }
-
-/* mem_wb mem_access(ex_mem ex_mem_old){
-  mem_wb output;
-  if (ex_mem_old.op_code == 11) {
-    output.mdr = memory.data_segment[ex_mem_old.alu_out].content;
-  } else if (ex_mem_old.op_code == 12) {
-    output.mdr = memory.data_segment[ex_mem_old.alu_out].content;
-  } else if (ex_mem_old.op_code == 13) {
-    output.mdr = ex_mem_old.alu_out;
-  }
-
-  output.op_code = ex_mem_old.op_code;
-  output.op_B = ex_mem_old.op_B;
-  output.alu_out = ex_mem_old.alu_out;
-  output.rd = ex_mem_old.rd;
-
-  return output;
-}
-
-void write_back(mem_wb mem_wb) {
-  if (ex_mem_old.op_code == 11) {
-    registers[mem_wb.op_B] = mem_wb.mdr;
-  } else if (ex_mem_old.op_code == 12) {
-    registers[mem_wb.op_B] = mem_wb.mdr;
-  } else if (ex_mem_old.op_code == 13) {
-    registers[mem_wb.op_B] = mem_wb.mdr;
-  } else {
-    registers[mem_wb.rd] = mem_wb.alu_out;
-  }
-}
-
-void syscall() {
-  printf("%s\n", registers[31]);
-
-  int service_num = registers[29];
-  int arg1 = registers[30];
-  int arg2 = registers[31];
-
-  switch (service_num) {
-  	case 0 :
-  		readString();
-      break;
-  	case 1 :
-  		writeString();
-      break;
-  	case 2 :
-  		run = 0;
-  }
-} */

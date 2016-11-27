@@ -101,4 +101,14 @@ typedef struct scoreboard {
 	int fpr_status[NUM_FP_REGISTERS];
 } scoreboard;
 
+typedef struct exe_instruction {
+	int op_code;
+	int int_a_value;
+	int int_b_value;
+	int int_dest_value;
+	float fp_a_value;
+	float fp_b_value;
+	float fp_dest_value;
+} exe_instruction;
+
 #endif // MEMORY_H_

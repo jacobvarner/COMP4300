@@ -33,10 +33,11 @@ bool issue_instruction(scoreboard *scoreboard, Memory code_segment, pc *pc, Memo
 op decode(Text instruction);
 bool check_fu_busy(scoreboard scoreboard, op op);
 bool check_waw(scoreboard scoreboard, op op);
+bool check_raw(scoreboard scoreboard, op op);
 void set_fetch_buffer(Memory fetch_buffer, Text instruction);
-void read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer);
-void fu_execution(scoreboard *scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer);
-void write_result(scoreboard *scoreboard, int *int_register_file[], float *fp_register_file[], Memory *fetch_buffer);
+exe_instruction read_operands(scoreboard scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer);
+exe_instruction fu_execution(scoreboard *scoreboard, exe_instruction *instr);
+void write_result(scoreboard *scoreboard, int *int_register_file[], float *fp_register_file[], Memory *fetch_buffer, exe_instruction instr);
 char zero(int input);
 
 
@@ -72,14 +73,15 @@ void simulator_run(Memory code_segment, pc *pc) {
     // Prints the scoreboard in its current state to help debug
     //printf("PC: %d\n", pc->program_counter);
     print_scoreboard(scoreboard, code_segment);
-    bool stall = issue_instruction(&scoreboard, code_segment, pc, &fetch_buffer);
-    read_operands(&scoreboard, int_register_file, fp_register_file, fetch_buffer);
+    bool stall = issue_instruction(&scoreboard, code_segment, &pc, &fetch_buffer);
+    exe_instruction instr read_operands(&scoreboard, int_register_file, fp_register_file, fetch_buffer, pc);
     //printf("PC: %d\n", pc->program_counter);
     //print_scoreboard(scoreboard, code_segment);
-    fu_execution(&scoreboard, int_register_file, fp_register_file, fetch_buffer);
+    fu_execution(&scoreboard, &instr);
     write_result(&scoreboard, &int_register_file, &fp_register_file, &fetch_buffer);
     pc->num_cycles++;
 
+    // Need to check for all instructions finished
     running = 0;
   }
 }
@@ -482,12 +484,58 @@ void set_fetch_buffer(Memory fetch_buffer, Text instruction) {
   fetch_buffer.num_instructions++;
 }
 
-void read_operands(scoreboard *scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer) {
-  // TODO
+exe_instruction read_operands(scoreboard *scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer, pc pc) {
+  // Fetch the oldest instruction from the buffer
+  Text instruction = fetch_buffer.text_segment[0];
+  op op = decode(instruction);
+  while (check_raw(*scoreboard, op) == false) {
+    // Read operands
+    exe_instruction instr;
+    instr.op_code = op.op_code;
+    switch (op.op_code) {
+      case 12:
+      case 13:
+      case 14:
+      case 15:
+      case 16:
+        if (op.reg_a != -1) {
+          instr.fp_a_value = fp_register_file[op.reg_a];
+        }
+        if (op.reg_b != -1) {
+          instr.fp_b_value = fp_register_file[op.reg_b];
+        }
+        break;
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      case 10:
+        if (op.reg_a != -1) {
+          instr.reg_a_value = int_register_file[op.reg_a];
+        }
+        if (op.reg_b != -1) {
+          instr.reg_b_value = int_register_file[op.reg_b];
+        }
+        break;
+    }
+    // Update scoreboard
+    for (int i = 0; i < instruction.num_instructions; i++) {
+        if (scoreboard->i_status[i].read == 0) {
+          scoreboard->i_status[i].read = pc.num_cycles + 1;
+          break;
+        }
+    }
+    return instr;
+  }
 }
 
-void fu_execution(scoreboard *scoreboard, int int_register_file[], float fp_register_file[], Memory fetch_buffer) {
-  // TODO
+exe_instruction fu_execution(scoreboard *scoreboard, exe_instruction *instr) {
+  
 }
 
 void write_result(scoreboard *scoreboard, int *int_register_file[], float *fp_register_file[], Memory *fetch_buffer) {
@@ -500,6 +548,19 @@ char zero(int input) {
   } else {
     char c = input + '0';
     return c;
+  }
+}
+
+bool check_raw(scoreboard scoreboard, op op) {
+  for (int i = 0; i < NUM_FUS; i++) {
+    if (scoreboard.fu_status[i].fi == op.reg_a) {
+      // Register matches destination of previous instruction
+      return false;
+    } else if (scoreboard.fu_status[i].fi == op.reg_b) {
+      return false;
+    } else {
+      return true;
+    }
   }
 }
 
